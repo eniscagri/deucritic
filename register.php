@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: { primary: '#44b5d5', secondary: '#f3cc8b', dark: '#1e293b' }
+                    colors: { primary: '#b84834', secondary: '#e9c65a', dark: '#1d352f' }
                 }
             }
         };
@@ -157,6 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         #recoveryEmailDiv { transition: all 0.4s ease-in-out; overflow: hidden; }
     </style>
     <link rel="icon" href="/gorsel/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="min-h-screen bg-slate-50 flex items-center justify-center p-3 md:p-6">
 
@@ -450,7 +451,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </select>
             </div>
 
-            <button type="submit" class="w-full bg-primary text-white p-4 rounded-2xl font-extrabold text-lg hover:bg-[#3ba2c0] hover:-translate-y-1 hover:shadow-lg transition-all active:scale-95">
+            <button type="submit" class="w-full bg-primary text-white p-4 rounded-2xl font-extrabold text-lg hover:bg-[#963926] hover:-translate-y-1 hover:shadow-lg transition-all active:scale-95">
                 Hesabımı Oluştur 🚀
             </button>
         </form>

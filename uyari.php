@@ -38,6 +38,7 @@ foreach ($sakincali_konular as $konu) {
 }
 .animate-fadeInUp { animation: fadeInUp 0.5s ease-out; }
 </style>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
 

@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title']) && $is_logge
     
     /* Hikaye Önizleme Container'ı için */
     .story-preview-bg {
-        background-image: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+        background-image: radial-gradient(circle at center, #1d352f 0%, #1d352f 100%);
     }
 </style>
 

@@ -1,23 +1,11 @@
-<style>
-    tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        primary: '#f3cc8b',
-        secondary: '#29B5D4',
-      }
-    }
-  }
-}
-</style>
 <footer class="mt-20 pb-10 border-t border-gray-100 bg-white/30 backdrop-blur-xl">
     <div class="max-w-6xl mx-auto px-6 pt-12">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-10 mb-12">
             
             <div class="md:col-span-5 space-y-4">
                 <a href="index.php" class="flex items-center gap-3 group">
-                    <img src="/gorsel/logo.png" alt="Deucritic " class="w-10 h-10 transition-transform group-hover:rotate-12">
-                    <span class="text-2xl font-black tracking-tighter text-gray-900">Deucritic <span class="text-secondary">Sözlük</span></span>
+                    <img src="/gorsel/deucritic-mark.svg" alt="Deucritic " class="w-10 h-10 transition-transform group-hover:rotate-12">
+                    <span class="dc-wordmark text-2xl font-black tracking-tighter text-gray-900">Deucritic <span class="text-secondary">Sözlük</span></span>
                 </a>
                 <p class="text-gray-500 text-sm leading-relaxed max-w-sm">
                     Dokuz Eylül Üniversitesi'nin dijital hafızası. Fikirlerin özgürce paylaşıldığı, kampüsün nabzının tutulduğu interaktif eleştiri, tartışma ve bilgi platformu.

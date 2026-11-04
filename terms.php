@@ -25,6 +25,7 @@ function toggleSection(id){
     el.classList.toggle('hidden');
 }
 </script>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="min-h-screen flex flex-col">
 

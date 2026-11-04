@@ -25,7 +25,7 @@ $linkScheme = parse_url($url, PHP_URL_SCHEME);
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
-.text-primary { color: #44b5d5; }
+.text-primary { color: #b84834; }
 </style>
 <script>
 let countdown = 30;
@@ -39,6 +39,7 @@ function updateCountdown() {
 }
 document.addEventListener('DOMContentLoaded', updateCountdown);
 </script>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md text-center">

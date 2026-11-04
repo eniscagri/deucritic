@@ -37,7 +37,7 @@ function timeAgoTr($datetime) {
 }
 ?>
 
-<section class="relative w-full max-w-6xl mx-auto mb-12">
+<section id="gundem" class="relative w-full max-w-6xl mx-auto mb-12">
     <div class="flex items-center justify-between mb-8 px-2 relative z-40">
         <div class="relative inline-block" id="gundemDropdownWrapper">
             <h2 id="gundemToggleBtn" class="flex items-center gap-3 text-3xl font-extrabold text-slate-800 tracking-tight cursor-pointer select-none group">

@@ -85,6 +85,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 
 <body class="min-h-screen text-white flex items-center justify-center px-5 relative">

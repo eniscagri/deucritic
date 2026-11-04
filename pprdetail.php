@@ -31,6 +31,7 @@ body { background-color: #f9fafb; font-family: 'Inter', sans-serif; }
 .news-content p { margin-bottom: 1rem; }
 .back-btn:hover { text-decoration: underline; }
 </style>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="min-h-screen flex flex-col">
 

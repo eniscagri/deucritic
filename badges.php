@@ -159,7 +159,7 @@ if(isset($_SESSION['user_id'])) {
         theme: {
             extend: {
                 fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
-                colors: { primary: '#44b5d5', secondary: '#f3cc8b' }
+                colors: { primary: '#b84834', secondary: '#e9c65a' }
             }
         }
     }
@@ -172,7 +172,7 @@ body {
 }
 
 header {
-    background: linear-gradient(135deg, #44b5d5, #5bc8e5, #f3cc8b);
+    background: linear-gradient(135deg, #b84834, #d8785d, #e9c65a);
     background-size: 200% 200%;
     animation: gradientShift 8s ease infinite;
 }
@@ -192,6 +192,7 @@ header {
 }
 </style>
 
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="text-slate-800 pb-20">
 
@@ -436,14 +437,14 @@ document.addEventListener('DOMContentLoaded', () => {
             angle: 60,
             spread: 55,
             origin: { x: 0 },
-            colors: ['#44b5d5', '#f3cc8b', '#ffbe0b', '#fb5607']
+            colors: ['#b84834', '#e9c65a', '#ffbe0b', '#fb5607']
         });
         confetti({
             particleCount: 5,
             angle: 120,
             spread: 55,
             origin: { x: 1 },
-            colors: ['#44b5d5', '#f3cc8b', '#ffbe0b', '#fb5607']
+            colors: ['#b84834', '#e9c65a', '#ffbe0b', '#fb5607']
         });
 
         if (Date.now() < end) {

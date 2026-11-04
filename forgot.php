@@ -71,11 +71,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         theme: { 
             extend: { 
                 fontFamily: { sans: ['Inter', 'sans-serif'] },
-                colors: { primary: '#44b5d5', secondary: '#f3cc8b', dark: '#1e293b' } 
+                colors: { primary: '#b84834', secondary: '#e9c65a', dark: '#1d352f' }
             } 
         } 
     }
 </script>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4 font-inter selection:bg-primary/20">
     

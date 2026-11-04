@@ -191,6 +191,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         
         .tick-icon { transition: color 0.3s ease; font-size: 11px; }
     </style>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="flex flex-col md:flex-row h-[100dvh] w-full relative selection:bg-indigo-100 selection:text-indigo-900">
 

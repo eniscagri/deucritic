@@ -3,11 +3,11 @@
     
     <a href="index.php" class="flex items-center gap-3 group shrink-0">
       <div class="relative">
-        <img src="/gorsel/logo.png" alt="Logo" class="w-10 h-10 md:w-12 md:h-12 drop-shadow-sm transition-transform duration-500 group-hover:rotate-[360deg]">
+        <img src="/gorsel/deucritic-mark.svg" alt="Deucritic" class="w-10 h-10 md:w-12 md:h-12 drop-shadow-sm transition-transform duration-500 group-hover:rotate-[360deg]">
         <div class="absolute inset-0 bg-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
       </div>
       <span class="text-xl md:text-2xl font-[900] tracking-tighter text-gray-900 leading-none">
-        Deucritic <span class="text-[#f3cc8b] drop-shadow-sm transition-colors group-hover:text-primary">Sözlük</span>
+        Deucritic <span class="text-[#e9c65a] drop-shadow-sm transition-colors group-hover:text-primary">Sözlük</span>
       </span>
     </a>
 

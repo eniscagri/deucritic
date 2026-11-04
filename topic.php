@@ -86,6 +86,7 @@ if($is_logged_in){
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="text-slate-800">
 

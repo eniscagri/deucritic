@@ -40,6 +40,7 @@ if (!isset($_SESSION['user_id'])) {
 <meta charset="UTF-8">
 <title>Şifre Sıfırlama</title>
 <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
 

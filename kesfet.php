@@ -35,7 +35,7 @@
         }
 
         .orange-button {
-            background: #1a1a1a;
+            background: #1d352f;
             transition: all 0.3s ease;
         }
 
@@ -50,6 +50,7 @@
             background-size: 30px 30px;
         }
     </style>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="min-h-screen flex items-center justify-center p-4 bg-pattern">
 
@@ -64,7 +65,7 @@
                     <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-[0.2em]">Kolektif Zeka Yakında</span>
                 </div>
 
-                <h1 class="text-5xl md:text-7xl font-[800] text-[#1a1a1a] mb-8 leading-[1.1] tracking-tight">
+                <h1 class="text-5xl md:text-7xl font-[800] text-[#1d352f] mb-8 leading-[1.1] tracking-tight">
                     Kampüsün Nabzı <br>
                     <span class="text-[#f8981d]">Tek Bir Fokus</span> Noktasında.
                 </h1>
@@ -77,7 +78,7 @@
                     
                     <div class="logic-card p-8">
                         <div class="text-[#f8981d] text-3xl mb-6"><i class="fas fa-layer-group"></i></div>
-                        <h3 class="text-xl font-bold text-[#1a1a1a] mb-3">Hiper-Lokal Filtreleme</h3>
+                        <h3 class="text-xl font-bold text-[#1d352f] mb-3">Hiper-Lokal Filtreleme</h3>
                         <p class="text-slate-500 text-sm leading-relaxed">
                             Buca, Tınaztepe veya Balçova... Sadece senin kampüsünde ne olup bittiğini, hangi mekanın parladığını süzerek getiriyoruz.
                         </p>
@@ -85,7 +86,7 @@
 
                     <div class="logic-card p-8">
                         <div class="text-[#f8981d] text-3xl mb-6"><i class="fas fa-bolt"></i></div>
-                        <h3 class="text-xl font-bold text-[#1a1a1a] mb-3">Onep Trendleri</h3>
+                        <h3 class="text-xl font-bold text-[#1d352f] mb-3">Onep Trendleri</h3>
                         <p class="text-slate-500 text-sm leading-relaxed">
                             Topluluğun en çok yanıt verdiği, vizelerden daha fazla konuşulan o "kritik" konuları algoritmanın en tepesine taşıyoruz.
                         </p>
@@ -93,7 +94,7 @@
 
                     <div class="logic-card p-8">
                         <div class="text-[#f8981d] text-3xl mb-6"><i class="fas fa-fingerprint"></i></div>
-                        <h3 class="text-xl font-bold text-[#1a1a1a] mb-3">Akademik Feedback</h3>
+                        <h3 class="text-xl font-bold text-[#1d352f] mb-3">Akademik Feedback</h3>
                         <p class="text-slate-500 text-sm leading-relaxed">
                             Dersler, hocalar ve kampüs hayatı hakkında en "gerçek" yorumları, reklam karmaşasına girmeden keşfetmeni sağlıyoruz.
                         </p>

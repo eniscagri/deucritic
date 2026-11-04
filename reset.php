@@ -101,8 +101,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="icon" href="/gorsel/favicon.ico" type="image/x-icon">
 <script>
-    tailwind.config = { theme: { extend: { colors: { primary: '#44b5d5', secondary: '#f3cc8b', dark: '#1e293b' } } } }
+    tailwind.config = { theme: { extend: { colors: { primary: '#b84834', secondary: '#e9c65a', dark: '#1d352f' } } } }
 </script>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
   <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md relative overflow-hidden">
@@ -151,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         </div>
 
         <button type="submit"
-          class="w-full bg-primary text-white p-4 rounded-2xl font-extrabold text-lg hover:bg-[#3ba2c0] transition-all shadow-lg hover:-translate-y-1">
+          class="w-full bg-primary text-white p-4 rounded-2xl font-extrabold text-lg hover:bg-[#963926] transition-all shadow-lg hover:-translate-y-1">
           Şifreyi Güncelle 🔐
         </button>
       </form>

@@ -102,14 +102,14 @@ tailwind.config = {
     theme: { 
         extend: { 
             fontFamily: { sans: ['Inter', 'sans-serif'] },
-            colors: { primary: '#44b5d5', secondary: '#f3cc8b', dark: '#1e293b' } 
+            colors: { primary: '#b84834', secondary: '#e9c65a', dark: '#1d352f' }
         } 
     } 
 }
 </script>
 <style>
     body { background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
-    .tab-btn.active { background-color: #1e293b; color: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .tab-btn.active { background-color: #1d352f; color: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
     .tab-btn { color: #64748b; }
     .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -117,6 +117,7 @@ tailwind.config = {
     .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
 </style>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="text-slate-800 antialiased selection:bg-primary/20 selection:text-primary">
 

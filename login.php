@@ -73,10 +73,10 @@ tailwind.config = {
                 sans: ['Inter', 'sans-serif'],
             },
             colors: {
-                primary: '#44b5d5',
+                primary: '#b84834',
                 primaryDark: '#2c92b0',
-                secondary: '#f3cc8b',
-                dark: '#1e293b'
+                secondary: '#e9c65a',
+                dark: '#1d352f'
             }
         }
     }
@@ -119,8 +119,9 @@ input { font-size: 16px !important; }
 }
 .animate-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
 
-.input-field:focus-within label { color: #44b5d5; }
+.input-field:focus-within label { color: #b84834; }
 </style>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="font-sans text-slate-800 antialiased selection:bg-primary/20 selection:text-primaryDark">
 

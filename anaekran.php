@@ -12,12 +12,13 @@
                 extend: {
                     colors: {
                         'deucritic-primary': '#3b82f6', // Örnek ana renk (mavi)
-                        'deucritic-dark': '#1e293b',    // Örnek koyu renk
+                        'deucritic-dark': '#1d352f',    // Örnek koyu renk
                     }
                 }
             }
         }
     </script>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="bg-gray-50 font-sans antialiased text-gray-800">
 

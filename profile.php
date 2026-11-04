@@ -198,7 +198,7 @@ function getCoverPhotoUrl($photo_path) {
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { primary: '#44b5d5', secondary: '#f3cc8b', dark: '#1e293b' }
+                    colors: { primary: '#b84834', secondary: '#e9c65a', dark: '#1d352f' }
                 }
             }
         }
@@ -206,7 +206,7 @@ function getCoverPhotoUrl($photo_path) {
     <style>
         body { background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         .glass-header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .tab-btn.active { background-color: #1e293b; color: white; shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .tab-btn.active { background-color: #1d352f; color: white; shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .tab-btn { color: #64748b; }
         .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -270,6 +270,7 @@ document.addEventListener('keydown', (e) => {
     animation: fade-in 0.2s ease-out forwards;
 }
 </style>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="text-slate-800 antialiased selection:bg-primary/20 selection:text-primary">
 <?php include 'header.php'; ?>

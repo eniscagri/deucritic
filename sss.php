@@ -18,8 +18,8 @@ $is_logged_in = isset($_SESSION['user_id']);
             theme: {
                 extend: {
                     colors: {
-                        primary: '#44b5d5',
-                        secondary: '#f3cc8b',
+                        primary: '#b84834',
+                        secondary: '#e9c65a',
                     },
                     fontFamily: {
                         sans: ['Inter', 'Arial', 'sans-serif'],
@@ -30,12 +30,13 @@ $is_logged_in = isset($_SESSION['user_id']);
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
-        .text-primary { color: #44b5d5; }
-        .bg-primary { background-color: #44b5d5; }
-        .bg-secondary { background-color: #f3cc8b; }
+        .text-primary { color: #b84834; }
+        .bg-primary { background-color: #b84834; }
+        .bg-secondary { background-color: #e9c65a; }
         .accordion { cursor: pointer; transition: background-color 0.2s ease; }
-        .accordion-content { display: none; padding: 0.5rem 1rem; border-left: 2px solid #44b5d5; background-color: #fdfdfd; }
+        .accordion-content { display: none; padding: 0.5rem 1rem; border-left: 2px solid #b84834; background-color: #fdfdfd; }
     </style>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="bg-gray-100 min-h-screen">
 
@@ -43,7 +44,7 @@ $is_logged_in = isset($_SESSION['user_id']);
 <header class="bg-primary text-white shadow">
     <div class="container mx-auto p-4 flex justify-between items-center">
         <a href="index.php" class="flex items-center gap-2">
-            <img src="/gorsel/logo.png" alt="Logo" class="w-10 h-10">
+            <img src="/gorsel/deucritic-mark.svg" alt="Logo" class="w-10 h-10">
             <h1 class="text-2xl font-bold">Deucritic Sözlük</h1>
         </a>
         <nav class="flex gap-4">

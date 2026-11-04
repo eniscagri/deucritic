@@ -49,6 +49,7 @@ body { background-color: #f9fafb; font-family: 'Inter', sans-serif; }
 .fade-in { animation: fadeIn 0.5s ease-in-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 
 <body class="min-h-screen">

@@ -79,7 +79,7 @@ $defaultAvatar = !empty($user['profile_photo'])
         theme: { 
             extend: { 
                 fontFamily: { sans: ['Inter', 'sans-serif'] },
-                colors: { primary: '#44b5d5', secondary: '#f3cc8b', dark: '#1e293b' } 
+                colors: { primary: '#b84834', secondary: '#e9c65a', dark: '#1d352f' }
             } 
         } 
     };
@@ -102,6 +102,7 @@ $defaultAvatar = !empty($user['profile_photo'])
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 <link rel="icon" href="/gorsel/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
 
@@ -159,7 +160,7 @@ $defaultAvatar = !empty($user['profile_photo'])
 
             <div class="flex flex-col gap-3 mt-8">
                 <button type="submit" id="saveBtn"
-                        class="w-full bg-primary text-white p-3.5 rounded-xl font-extrabold text-lg hover:bg-[#3ba2c0] transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1">
+                        class="w-full bg-primary text-white p-3.5 rounded-xl font-extrabold text-lg hover:bg-[#963926] transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1">
                     Bilgileri Onayla ve Giriş Yap
                 </button>
                 

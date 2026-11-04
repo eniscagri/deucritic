@@ -49,12 +49,12 @@
     }
     .logo-glow { 
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-        width: 50px; height: 50px; background: #44b5d5; filter: blur(25px); opacity: 0.5; z-index: 1; 
+        width: 50px; height: 50px; background: #b84834; filter: blur(25px); opacity: 0.5; z-index: 1;
     }
 
     .pwa-info h4 { margin: 0; font-size: 18px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; }
     .pwa-badge { 
-        background: linear-gradient(90deg, #44b5d5, #5bc8e5); color: #0f172a; 
+        background: linear-gradient(90deg, #b84834, #d8785d); color: #1d352f;
         font-size: 10px; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; 
         font-weight: 900; margin-left: 8px; vertical-align: middle;
     }
@@ -63,7 +63,7 @@
     .pwa-actions { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 24px; }
     
     #btn-pwa-install { 
-        background: #ffffff; color: #0f172a; border: none; padding: 16px 28px; 
+        background: #ffffff; color: #1d352f; border: none; padding: 16px 28px;
         border-radius: 18px; font-weight: 800; cursor: pointer; font-size: 15px; 
         flex: 1; box-shadow: 0 10px 25px rgba(255,255,255,0.15); 
         transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 10px;
@@ -92,9 +92,9 @@
     .ios-guide-item { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
     .ios-guide-item:last-child { margin-bottom: 0; }
     .ios-guide-icon { 
-        width: 32px; height: 32px; background: rgba(68, 181, 213, 0.2); 
+        width: 32px; height: 32px; background: rgba(184, 72, 52, .16);
         border-radius: 10px; display: flex; align-items: center; justify-content: center;
-        color: #44b5d5; font-weight: 800; font-size: 14px; flex-shrink: 0;
+        color: #b84834; font-weight: 800; font-size: 14px; flex-shrink: 0;
     }
     .ios-guide-text { font-size: 14px; color: #e2e8f0; font-weight: 500; line-height: 1.4; }
     .ios-icon-box { background: #334155; padding: 4px; border-radius: 6px; display: inline-flex; vertical-align: middle; }
@@ -105,7 +105,7 @@
         <div class="pwa-header">
             <div class="pwa-text-group">
                 <div class="pwa-logo-wrapper">
-                    <img src="https://deucritic.com/gorsel/logo.png" alt="Deucritic" class="pwa-logo">
+                    <img src="/gorsel/deucritic-mark.svg" alt="Deucritic" class="pwa-logo">
                     <div class="logo-glow"></div>
                 </div>
                 <div class="pwa-info">
@@ -123,7 +123,7 @@
         <div id="ios-guide-container" class="ios-guide" style="display: none;">
             <div class="ios-guide-item">
                 <div class="ios-guide-icon">1</div>
-                <div class="ios-guide-text">Tarayıcının altındaki <span class="ios-icon-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#44b5d5" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></span> <b>Paylaş</b> butonuna dokun.</div>
+                <div class="ios-guide-text">Tarayıcının altındaki <span class="ios-icon-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b84834" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></span> <b>Paylaş</b> butonuna dokun.</div>
             </div>
             <div class="ios-guide-item">
                 <div class="ios-guide-icon">2</div>
@@ -226,10 +226,10 @@ if($user_id){
     <div class="max-w-6xl mx-auto px-4 md:px-6 flex justify-between items-center">
         
         <a href="index.php" class="flex items-center gap-3 group select-none">
-            <img src="/gorsel/logo.png" class="w-10 h-10 md:w-11 md:h-11 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110 drop-shadow-sm">
+            <img src="/gorsel/deucritic-mark.svg" alt="Deucritic" class="w-10 h-10 md:w-11 md:h-11 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110 drop-shadow-sm">
             <div class="flex flex-col justify-center">
-                <span class="text-xl md:text-2xl font-black text-[#1e293b] tracking-tight leading-none">Deucritic</span>
-                <span class="text-[9px] font-black text-[#44b5d5] tracking-[0.25em] uppercase leading-none mt-0.5">Sözlük</span>
+                <span class="text-xl md:text-2xl dc-wordmark font-black text-[#1d352f] tracking-tight leading-none">Deucritic</span>
+                <span class="text-[9px] font-black text-[#b84834] tracking-[0.25em] uppercase leading-none mt-0.5">Sözlük</span>
             </div>
         </a>
 
@@ -243,7 +243,7 @@ if($user_id){
         <div class="flex items-center gap-2 sm:gap-3">
             
             <button @click="searchOpen = !searchOpen" 
-                class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 border border-slate-200 hover:bg-white hover:text-[#44b5d5] hover:shadow-sm transition-all focus:outline-none">
+                class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 border border-slate-200 hover:bg-white hover:text-[#b84834] hover:shadow-sm transition-all focus:outline-none">
                 <i class="fa-solid" :class="searchOpen ? 'fa-xmark' : 'fa-magnifying-glass'"></i>
             </button>
 
@@ -320,12 +320,12 @@ if($user_id){
 
             <?php else: ?>
                 <a href="login.php" class="hidden sm:flex items-center text-sm font-extrabold text-slate-500 hover:text-slate-800 transition-colors px-3">Giriş</a>
-                <a href="register.php" class="px-5 py-2.5 bg-[#1e293b] hover:bg-[#44b5d5] text-white rounded-xl text-sm font-extrabold shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-2">
+                <a href="register.php" class="px-5 py-2.5 bg-[#1d352f] hover:bg-[#b84834] text-white rounded-xl text-sm font-extrabold shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-2">
                     Katıl <i class="fa-solid fa-arrow-right text-xs"></i>
                 </a>
             <?php endif; ?>
 
-            <button @click="mobileOpen = !mobileOpen" class="lg:hidden w-10 h-10 flex items-center justify-center bg-[#1e293b] text-white rounded-xl active:scale-95 transition-transform">
+            <button @click="mobileOpen = !mobileOpen" class="lg:hidden w-10 h-10 flex items-center justify-center bg-[#1d352f] text-white rounded-xl active:scale-95 transition-transform">
                 <i class="fa-solid text-lg" :class="mobileOpen ? 'fa-xmark' : 'fa-bars-staggered'"></i>
             </button>
 
@@ -344,22 +344,22 @@ if($user_id){
         
         <div class="max-w-3xl mx-auto">
             <form action="search.php" method="GET" class="relative group">
-                <div class="absolute left-6 top-1/2 -translate-y-1/2 flex items-center text-slate-400 group-focus-within:text-[#44b5d5] transition-colors pointer-events-none">
+                <div class="absolute left-6 top-1/2 -translate-y-1/2 flex items-center text-slate-400 group-focus-within:text-[#b84834] transition-colors pointer-events-none">
                     <i class="fa-solid fa-magnifying-glass text-xl"></i>
                 </div>
                 
                 <input name="q" type="text" placeholder="Aklında ne var? (Başlık, @yazar veya #etiket)" 
-                       class="w-full pl-16 pr-28 py-5 rounded-[2rem] bg-slate-50 border-2 border-slate-100 focus:border-[#44b5d5]/30 focus:bg-white focus:shadow-xl focus:shadow-[#44b5d5]/5 outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400 text-lg"
+                       class="w-full pl-16 pr-28 py-5 rounded-[2rem] bg-slate-50 border-2 border-slate-100 focus:border-[#b84834]/30 focus:bg-white focus:shadow-xl focus:shadow-[#b84834]/5 outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400 text-lg"
                        x-init="$watch('searchOpen', value => value && $nextTick(() => $el.focus()))">
 
-                <button class="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-3 bg-[#1e293b] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#44b5d5] transition-all shadow-md active:scale-95">
+                <button class="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-3 bg-[#1d352f] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#b84834] transition-all shadow-md active:scale-95">
                     Ara
                 </button>
             </form>
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2"><i class="fa-solid fa-bolt text-secondary mr-1"></i> Trend Başlıklar:</span>
-                <a href="search.php?q=yemekhane" class="tag-pill"><i class="fa-solid fa-utensils text-[#44b5d5]"></i> Yemekhane</a>
+                <a href="search.php?q=yemekhane" class="tag-pill"><i class="fa-solid fa-utensils text-[#b84834]"></i> Yemekhane</a>
                 <a href="search.php?q=vizeler" class="tag-pill"><i class="fa-solid fa-fire text-rose-500"></i> Vizeler</a>
                 <a href="search.php?q=itiraf" class="tag-pill"><i class="fa-solid fa-mask text-purple-500"></i> İtiraf</a>
             </div>
@@ -393,7 +393,7 @@ if($user_id){
             <?php if(!$user_id): ?>
                 <div class="grid grid-cols-2 gap-4">
                     <a href="login.php" class="py-5 bg-slate-100 hover:bg-slate-200 text-center rounded-3xl font-black text-slate-700 text-sm uppercase tracking-widest transition-colors active:scale-95">Giriş</a>
-                    <a href="register.php" class="py-5 bg-[#44b5d5] hover:bg-[#3ba2c0] text-white text-center rounded-3xl font-black shadow-xl shadow-[#44b5d5]/30 uppercase tracking-widest text-sm transition-all active:scale-95">Katıl 🚀</a>
+                    <a href="register.php" class="py-5 bg-[#b84834] hover:bg-[#963926] text-white text-center rounded-3xl font-black shadow-xl shadow-[#b84834]/30 uppercase tracking-widest text-sm transition-all active:scale-95">Katıl 🚀</a>
                 </div>
             <?php else: ?>
                 <div class="bg-slate-50 p-4 rounded-3xl border border-slate-100 mb-4 flex items-center gap-4">
@@ -435,7 +435,7 @@ if($user_id){
 }
 .menu-item:hover {
     background-color: #f8fafc; 
-    color: #1e293b; 
+    color: #1d352f;
 }
 .menu-icon {
     width: 28px;
@@ -463,7 +463,7 @@ if($user_id){
 }
 .tag-pill:hover {
     border-color: rgba(68,181,213,0.3);
-    color: #44b5d5;
+    color: #b84834;
     background-color: rgba(68,181,213,0.05);
 }
 
@@ -475,7 +475,7 @@ if($user_id){
     letter-spacing: -0.02em;
     transition: color 0.3s;
 }
-.mobile-nav-link:hover { color: #1e293b; }
+.mobile-nav-link:hover { color: #1d352f; }
 
 [x-cloak] { display: none !important; }
 

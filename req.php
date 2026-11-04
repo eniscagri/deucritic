@@ -115,6 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 
 <body class="text-slate-800 min-h-screen flex flex-col items-center pt-24 pb-12 px-4">
@@ -123,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="max-w-5xl mx-auto flex justify-between items-center px-4 py-3">
         <a href="index.php" class="flex items-center gap-3 group">
             <div class="p-1.5 bg-gradient-to-tr from-yellow-500 to-brandBlue rounded-xl shadow-sm group-hover:scale-105 transition-transform">
-                <img src="/gorsel/logo.png" class="w-8 h-8 rounded-lg" alt="Logo">
+                <img src="/gorsel/deucritic-mark.svg" class="w-8 h-8 rounded-lg" alt="Logo">
             </div>
             <span class="font-extrabold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500">Deucritic</span>
         </a>

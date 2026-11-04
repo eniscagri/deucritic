@@ -34,10 +34,10 @@ tailwind.config = {
                 sans: ['"Plus Jakarta Sans"', 'sans-serif'],
             },
             colors: {
-                primary: '#44b5d5',
+                primary: '#b84834',
                 primaryDark: '#369ab7',
-                secondary: '#f3cc8b',
-                darkbg: '#0f172a'
+                secondary: '#e9c65a',
+                darkbg: '#1d352f'
             }
         }
     }
@@ -59,6 +59,7 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.5);
 }
 </style>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 
 <body class="min-h-screen flex items-center justify-center p-4 sm:p-8 font-sans text-slate-800">
@@ -72,7 +73,7 @@ body {
         <div class="relative z-10">
             <div class="flex items-center gap-3 mb-8">
                 <div class="bg-white p-2 rounded-xl shadow-lg">
-                    <img src="/gorsel/logo.png" alt="Deucritic Logo" class="w-10 h-10 object-contain">
+                    <img src="/gorsel/deucritic-mark.svg" alt="Deucritic Logo" class="w-10 h-10 object-contain">
                 </div>
                 <h1 class="text-3xl font-extrabold tracking-tight">Deucritic</h1>
             </div>

@@ -31,15 +31,14 @@ if ($is_logged_in) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Deucritic | Kampüsün Özgür Sesi</title>
-    <link rel="preload" as="image" href="/gorsel/bckg/bckgrondone.webp">
     <link rel="preconnect" href="https://deucritic.com">
     <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#cca43b" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#b84834" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1d352f" media="(prefers-color-scheme: dark)">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -77,10 +76,10 @@ if ($is_logged_in) {
             theme: {
                 extend: {
                     colors: {
-                        primary: '#cca43b',
-                        secondary: '#1a1a1a',
-                        dark: '#0f0f0f',
-                        gold_light: '#e5c066'
+                        primary: '#b84834',
+                        secondary: '#1d352f',
+                        dark: '#1d352f',
+                        gold_light: '#e9c65a'
                     },
                     borderRadius: { 'ios': '22px' }
                 }
@@ -88,7 +87,7 @@ if ($is_logged_in) {
         }
     </script>
     <style>
-        :root { --pwa-gold: #cca43b; }
+        :root { --pwa-gold: #b84834; }
         body {
             background: #000 no-repeat center center fixed;
             background-size: cover;
@@ -107,37 +106,38 @@ if ($is_logged_in) {
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js').catch(err => console.error('SW Error:', err));
         }
-
-        const setDynamicBG = () => {
-            const isMobile = window.innerWidth <= 768;
-            const path = isMobile ? '/gorsel/bckg/' : '/gorsel/bckg/';
-            const bgs = isMobile ? 
-                ['bckgrondonemb.jpg', 'bckgrondtwmb.jpg', 'bckgrondmb.jpg'] : 
-                ['bckgrondone.jpg', 'bckgrondtw.jpg', 'bckgrondthe.jpg'];
-            
-            const randomBG = bgs[Math.floor(Math.random() * bgs.length)];
-            requestIdleCallback(() => {
-                setDynamicBG();
-            });
-
-            img.onload = () => document.body.style.backgroundImage = `url('${img.src}')`;
-        };
-
         !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
         fbq('init', '921891054149834');
         fbq('track', 'PageView');
 
-        document.addEventListener('DOMContentLoaded', () => {
-            setDynamicBG();
-            console.log("%c DEUCRITIC V3 ", "background:#cca43b; color:#000; font-size:20px; font-weight:bold; border-radius:5px; padding:2px 10px;");
+        document.addEventListener('DOMContentLoaded', () => {            console.log("%c DEUCRITIC V3 ", "background:#e9c65a; color:#1d352f; font-size:20px; font-weight:bold; border-radius:5px; padding:2px 10px;");
             console.log("%cGüvenliğiniz için bu konsola bilmediğiniz kodları yapıştırmayın.", "color:#888;");
         });
     </script>
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="bg-gray-100 min-h-screen font-sans">
   <?php include 'header.php'; ?>
     <?php include 'parts/stories_bar.php'; ?>
 
+  <section class="dc-hero" aria-labelledby="dc-home-title">
+    <div>
+      <p class="dc-hero__eyebrow">DOKUZ EYLÜL ÜNİVERSİTESİ <span>•</span> ÖĞRENCİ SÖZLÜĞÜ</p>
+      <h1 id="dc-home-title">Kampüs konuşuyor.<br><em>Söz sende.</em></h1>
+      <p class="dc-hero__summary">Ders arası fikirlerinden şehir gündemine — DEÜ öğrencilerinin sözlüğü.</p>
+      <div class="dc-hero__actions">
+        <a class="dc-hero__button" href="<?= $is_logged_in ? '#onepForm' : 'register.php' ?>">
+          <?= $is_logged_in ? 'Bir şey yaz' : 'Sözlüğe katıl' ?>
+          <span aria-hidden="true">↗</span>
+        </a>
+        <a class="dc-hero__link" href="#gundem">Gündeme göz at ↓</a>
+      </div>
+    </div>
+    <div class="dc-hero__stamp" aria-label="Deucritic öğrenci sözlüğü">
+      <strong>DC</strong>
+      <small>DEÜ<br>ÖĞRENCİ SÖZLÜĞÜ</small>
+    </div>
+  </section>
   <main class="max-w-4xl mx-auto p-4 mt-6 space-y-8">
 
     <?php include 'npost.php'; ?>

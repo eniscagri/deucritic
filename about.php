@@ -21,8 +21,8 @@ $is_logged_in = isset($_SESSION['user_id']);
             theme: {
                 extend: {
                     colors: {
-                        primary: '#44b5d5',
-                        secondary: '#f3cc8b',
+                        primary: '#b84834',
+                        secondary: '#e9c65a',
                     }
                 }
             }
@@ -33,13 +33,14 @@ $is_logged_in = isset($_SESSION['user_id']);
   <link rel="icon" type="image/png" sizes="32x32" href="/gorsel/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/gorsel/favicon-16x16.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col justify-between">
     
 <header class="bg-primary text-white shadow">
     <div class="container mx-auto p-4 flex justify-between items-center">
         <a href="index.php" class="flex items-center gap-2">
-            <img src="/gorsel/logo.png" alt="Logo" class="w-10 h-10">
+            <img src="/gorsel/deucritic-mark.svg" alt="Logo" class="w-10 h-10">
             <h1 class="text-2xl font-bold">Deucritic Sözlük</h1>
         </a>
         <nav class="flex gap-4">
