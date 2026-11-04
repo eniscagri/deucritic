@@ -28,10 +28,10 @@ $is_logged_in = isset($_SESSION['user_id']);
             }
         }
     </script>
- <link rel="icon" href="/gorsel/favicon.ico" type="image/x-icon" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/gorsel/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/gorsel/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/gorsel/favicon-16x16.png">
+ <link rel="icon" href="/gorsel/favicon.ico?v=20261104" type="image/x-icon" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/gorsel/apple-touch-icon.png?v=20261104">
+  <link rel="icon" type="image/png" sizes="32x32" href="/gorsel/favicon-32x32.png?v=20261104">
+  <link rel="icon" type="image/png" sizes="16x16" href="/gorsel/favicon-16x16.png?v=20261104">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="/css/brand.css">
 </head>

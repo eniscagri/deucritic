@@ -865,7 +865,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
             ringtone.play().catch(e=>console.log('Oto-çalma engellendi.'));
 
             if (Notification.permission === 'granted') {
-                new Notification("Gelen Arama", { body: "<?= htmlspecialchars($chatUser['username']) ?> sesli arıyor!", icon: "/gorsel/favicon.ico" });
+                new Notification("Gelen Arama", { body: "<?= htmlspecialchars($chatUser['username']) ?> sesli arıyor!", icon: "/gorsel/favicon.ico?v=20261104" });
             }
 
             document.getElementById('callOverlay').classList.remove('hidden'); document.getElementById('callOverlay').classList.add('flex');

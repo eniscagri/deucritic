@@ -11,7 +11,7 @@ $lang = $_GET['lang'] ?? 'tr';
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?php echo $lang=='tr' ? 'Kullanım Koşulları' : 'Terms of Use'; ?> | Deucritic</title>
-<link rel="icon" href="/gorsel/favicon.ico">
+<link rel="icon" href="/gorsel/favicon.ico?v=20261104">
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
     body { background: #f4f5f7; font-family: Inter, sans-serif; }

@@ -24,7 +24,7 @@ $news_list = $stmt->fetchAll();
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Deucritic Haberler</title>
-<link rel="icon" href="/gorsel/favicon.ico">
+<link rel="icon" href="/gorsel/favicon.ico?v=20261104">
   <!--SEO-->
  <meta name="description" content="Deucritic, kullanıcıların fikirlerini özgürce paylaşabildiği, yorum yapabildiği ve çeşitli konularda eleştiri üretebildiği insan odaklı bir platformdur.">
     <meta name="keywords" content="Deucritic, eleştiri platformu, yorum, kullanıcı yorumları, sosyal platform, interaktif sözlük, özgür fikir, Türkiye">

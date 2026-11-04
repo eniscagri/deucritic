@@ -101,7 +101,7 @@ $defaultAvatar = !empty($user['profile_photo'])
     .animate-fadeIn { animation: fadeIn 0.6s ease-out forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>
-<link rel="icon" href="/gorsel/favicon.ico" type="image/x-icon" />
+<link rel="icon" href="/gorsel/favicon.ico?v=20261104" type="image/x-icon" />
     <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="min-h-screen bg-slate-50 flex items-center justify-center p-4">

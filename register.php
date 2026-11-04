@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* JS ile gizleme/gösterme efekti için */
         #recoveryEmailDiv { transition: all 0.4s ease-in-out; overflow: hidden; }
     </style>
-    <link rel="icon" href="/gorsel/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="/gorsel/favicon.ico?v=20261104" type="image/x-icon" />
     <link rel="stylesheet" href="/css/brand.css">
 </head>
 <body class="min-h-screen bg-slate-50 flex items-center justify-center p-3 md:p-6">
@@ -169,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h2 class="text-lg sm:text-xl md:text-3xl font-extrabold text-dark mb-1 md:mb-4">Topluluğa Katıl!</h2>
                 <p class="text-slate-600 text-xs sm:text-sm md:text-base mb-0 md:mb-8 font-medium">DEÜ'nün özgür platformunda yerini al.</p>
             </div>
-            <img src="/gorsel/register.png" alt="Deucritic'in eski ve yeni işaretini gösteren illüstrasyon" class="w-24 h-24 sm:w-28 sm:h-28 md:w-full md:h-auto md:max-h-[360px] object-contain" fetchpriority="high" onerror="this.onerror=null;this.src='/gorsel/deucritic-mark.svg';">
+            <img src="/gorsel/register.png" alt="Deucritic'in yeni marka işareti ve kampüs kimliği" class="w-24 h-24 sm:w-28 sm:h-28 md:w-full md:h-auto md:max-h-[360px] object-contain" fetchpriority="high" onerror="this.onerror=null;this.src='/gorsel/deucritic-mark.svg';">
         </div>
     </div>
 

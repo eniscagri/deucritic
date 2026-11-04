@@ -37,23 +37,16 @@ if ($is_logged_in) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20261104">
+    <link rel="icon" type="image/png" sizes="32x32" href="/gorsel/favicon-32x32.png?v=20261104">
+    <link rel="shortcut icon" href="/favicon.ico?v=20261104">
     <meta name="theme-color" content="#b84834" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#1d352f" media="(prefers-color-scheme: dark)">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Deucritic">
-    <link rel="apple-touch-icon" sizes="180x180" href="/gorsel/180x180logo.png">
-<link rel="apple-touch-icon" sizes="167x167" href="/gorsel/167x167logo.png">
-<link rel="apple-touch-icon" sizes="152x152" href="/gorsel/152x152logo.png">
-<link rel="apple-touch-icon" sizes="512x512" href="/gorsel/512x512logo.png">
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <link rel="apple-touch-icon" href="/gorsel/logoapp.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/gorsel/favicon-32x32.png">
-    <link rel="shortcut icon" href="/gorsel/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/gorsel/apple-touch-icon.png?v=20261104">
 
     <meta name="description" content="Deucritic: DEÜ öğrencilerinin fikirlerini paylaştığı, kampüs gündemini belirleyen anonim ve interaktif sözlük platformu.">
     <meta name="keywords" content="Deucritic, DEU sözlük, dokuz eylül üniversitesi, kampüs eleştiri, sosyal platform">

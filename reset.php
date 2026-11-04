@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DeuCritic | Şifre Sıfırlama</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link rel="icon" href="/gorsel/favicon.ico" type="image/x-icon">
+<link rel="icon" href="/gorsel/favicon.ico?v=20261104" type="image/x-icon">
 <script>
     tailwind.config = { theme: { extend: { colors: { primary: '#b84834', secondary: '#e9c65a', dark: '#1d352f' } } } }
 </script>

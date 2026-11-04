@@ -61,7 +61,7 @@ $bg = $images[array_rand($images)];
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
 <title>Giriş Yap - Deucritic</title>
 
-<link rel="icon" href="/gorsel/favicon.ico">
+<link rel="icon" href="/gorsel/favicon.ico?v=20261104">
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
