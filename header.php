@@ -242,7 +242,7 @@ if($user_id){
 
         <div class="flex items-center gap-2 sm:gap-3">
             
-            <button @click="searchOpen = !searchOpen" 
+            <button type="button" aria-label="Aramayı aç" :aria-expanded="searchOpen.toString()" @click="searchOpen = !searchOpen" 
                 class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 border border-slate-200 hover:bg-white hover:text-[#b84834] hover:shadow-sm transition-all focus:outline-none">
                 <i class="fa-solid" :class="searchOpen ? 'fa-xmark' : 'fa-magnifying-glass'"></i>
             </button>
@@ -348,11 +348,11 @@ if($user_id){
                     <i class="fa-solid fa-magnifying-glass text-xl"></i>
                 </div>
                 
-                <input name="q" type="text" placeholder="Aklında ne var? (Başlık, @yazar veya #etiket)" 
+                <input name="q" type="search" maxlength="100" autocomplete="off" placeholder="Başlık veya kullanıcı ara" 
                        class="w-full pl-16 pr-28 py-5 rounded-[2rem] bg-slate-50 border-2 border-slate-100 focus:border-[#b84834]/30 focus:bg-white focus:shadow-xl focus:shadow-[#b84834]/5 outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400 text-lg"
                        x-init="$watch('searchOpen', value => value && $nextTick(() => $el.focus()))">
 
-                <button class="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-3 bg-[#1d352f] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#b84834] transition-all shadow-md active:scale-95">
+                <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-3 bg-[#1d352f] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#b84834] transition-all shadow-md active:scale-95">
                     Ara
                 </button>
             </form>

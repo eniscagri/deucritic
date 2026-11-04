@@ -6,7 +6,14 @@ $response = ['success' => false, 'msg' => ''];
 
 $user_id = $_SESSION['user_id'] ?? null;
 if (!$user_id) {
+    http_response_code(401);
     $response['msg'] = 'Lütfen giriş yapın.';
+    exit(json_encode($response));
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !hash_equals($_SESSION['csrf_token'] ?? '', (string) ($_POST['csrf_token'] ?? ''))) {
+    http_response_code(403);
+    $response['msg'] = 'İstek doğrulanamadı.';
     exit(json_encode($response));
 }
 
@@ -37,7 +44,9 @@ try {
     }
 
 } catch (PDOException $e) {
-    $response['msg'] = 'Veritabanı hatası: ' . $e->getMessage();
+    error_log('Story deletion failed: ' . $e->getMessage());
+    http_response_code(500);
+    $response['msg'] = 'Hikaye silinirken bir hata oluştu.';
 }
 
 echo json_encode($response);

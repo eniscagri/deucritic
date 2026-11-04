@@ -7,16 +7,6 @@ $is_logged_in = isset($_SESSION['user_id']);
 $user_id = $_SESSION['user_id'] ?? null;
 $username = $_SESSION['user_name'] ?? 'Ziyaretçi';
 
-$stmt = $pdo->prepare("
-  SELECT t.id, t.title, t.description, t.anonymous, t.created_at, u.username 
-  FROM topics t
-  JOIN users u ON t.created_by = u.id
-  ORDER BY t.created_at DESC
-  LIMIT 12
-");
-$stmt->execute();
-$topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 if ($is_logged_in) {
   $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
   $stmt->execute([$user_id]);
@@ -63,7 +53,7 @@ if ($is_logged_in) {
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@deucritic">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com" defer></script>
     <script>
         tailwind.config = {
             theme: {
@@ -108,6 +98,8 @@ if ($is_logged_in) {
         });
     </script>
     <link rel="stylesheet" href="/css/brand.css">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-100 min-h-screen font-sans">
   <?php include 'header.php'; ?>

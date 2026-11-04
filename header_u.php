@@ -41,9 +41,15 @@
           </a>
         <?php endif; ?>
       </div>
+      <form action="search.php" method="get" role="search" class="ml-3 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-2 py-1 shadow-sm focus-within:border-[#b84834] focus-within:ring-2 focus-within:ring-[#b84834]/10">
+        <label class="sr-only" for="header-u-search">Deucritic'te ara</label>
+        <input id="header-u-search" type="search" name="q" placeholder="Kampüste ara" class="w-28 xl:w-40 border-0 bg-transparent p-1.5 text-sm font-medium text-gray-700 outline-none placeholder:text-gray-400 focus:ring-0" autocomplete="off">
+        <button type="submit" aria-label="Ara" class="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1d352f] text-white transition-colors hover:bg-[#b84834] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b84834]"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>
+      </form>
     </nav>
 
     <div class="lg:hidden flex items-center gap-3">
+        <a href="search.php" aria-label="Ara" title="Ara" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-[#1d352f] hover:bg-[#b84834] hover:text-white"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></a>
         <?php if (empty($_SESSION['user_id'])): ?>
             <a href="register.php" class="text-[10px] font-black bg-primary text-white px-3 py-2 rounded-xl uppercase tracking-tighter shadow-md">✨ Katıl</a>
         <?php endif; ?>

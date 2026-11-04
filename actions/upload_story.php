@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-if (empty($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
+if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', (string) $_POST['csrf_token'])) {
     http_response_code(403);
     die('❌ Geçersiz istek (CSRF koruması devrede).');
 }
@@ -34,8 +34,11 @@ $media_path = null;
 $media_type = null;
 
 try {
-    if (!empty($_FILES['story_media']) && $_FILES['story_media']['error'] === UPLOAD_ERR_OK) {
+    if (isset($_FILES['story_media']) && $_FILES['story_media']['error'] !== UPLOAD_ERR_NO_FILE) {
         $f = $_FILES['story_media'];
+        if ($f['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($f['tmp_name'] ?? '')) {
+            throw new RuntimeException('Dosya yüklenemedi. Tekrar deneyin.');
+        }
 
         $finfo = new finfo(FILEINFO_MIME_TYPE);
         $mime = $finfo->file($f['tmp_name']);
@@ -60,6 +63,10 @@ try {
 
         if (in_array($mime, $allowed_images, true) && @getimagesize($f['tmp_name']) === false) {
             throw new RuntimeException('Geçerli bir görsel dosyası yükleyin.');
+        }
+
+        if (in_array($mime, $allowed_videos, true) && !in_array(strtolower(pathinfo($f['name'] ?? '', PATHINFO_EXTENSION)), ['mp4', 'webm', 'ogg', 'ogv'], true)) {
+            throw new RuntimeException('Video uzantısı ve dosya türü uyuşmuyor.');
         }
 
         $media_type = in_array($mime, $allowed_images, true) ? 'image' : 'video';
@@ -102,6 +109,7 @@ try {
     header('Location: ../index.php');
     exit;
 } catch (Exception $e) {
+    error_log('Story upload failed: ' . $e->getMessage());
     $_SESSION['flash_error'] = '⚠️ Beklenmedik bir hata oluştu.';
     header('Location: ../index.php');
     exit;

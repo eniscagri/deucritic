@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title']) && $is_logge
     }
 </style>
 
-<section class="w-full max-w-2xl mx-auto mt-4 mb-8 px-4 sm:px-0">
+<section id="npostComposer" class="w-full max-w-2xl mx-auto mt-4 mb-8 px-4 sm:px-0">
     <div class="glass-create-panel p-5 sm:p-8 rounded-[2rem] relative overflow-hidden transition-all duration-300">
         
         <div class="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-bl from-orange-400/20 to-yellow-300/20 rounded-full blur-2xl pointer-events-none"></div>
@@ -185,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title']) && $is_logge
                         </div>
                         <div>
                             <p class="text-[15px] font-bold text-slate-700">Tıkla veya Sürükle Bırak</p>
-                            <p class="text-xs font-semibold text-slate-400 mt-1">Fotoğraf veya Video (Max: 10MB)</p>
+                            <p class="text-xs font-semibold text-slate-400 mt-1">Fotoğraf veya Video (Max: 20 MB)</p>
                         </div>
                     </div>
 

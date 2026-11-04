@@ -1,30 +1,28 @@
 <?php
-include 'includes/config.php';
+require_once __DIR__ . '/../includes/config.php';
 
 $user_id = $_SESSION['user_id'] ?? null;
 $stories = [];
 
 if ($user_id) {
-    // İzlenme sayılarını ve verilerini de çekmek için sorguyu güncelleyebilir veya API tarafında (fetch_stories.php) halledebilirsiniz.
     $stmt = $pdo->prepare("
-        SELECT s.*, u.username, u.profile_photo, u.id AS user_id
+        SELECT s.id, s.user_id, s.created_at, u.username, u.profile_photo
         FROM stories s
         JOIN users u ON s.user_id = u.id
-        LEFT JOIN followers f ON f.followed_id = u.id AND f.follower_id = :uid
-        WHERE s.expires_at > NOW() AND (s.user_id = :uid OR f.follower_id = :uid)
+        WHERE s.expires_at > NOW()
+          AND (s.user_id = :viewer_self OR EXISTS (
+              SELECT 1 FROM followers f WHERE f.followed_id = u.id AND f.follower_id = :viewer_follow
+          ))
+          AND s.id = (
+              SELECT s2.id FROM stories s2
+              WHERE s2.user_id = s.user_id AND s2.expires_at > NOW()
+              ORDER BY s2.created_at DESC, s2.id DESC LIMIT 1
+          )
         ORDER BY s.created_at DESC
+        LIMIT 30
     ");
-    $stmt->execute(['uid' => $user_id]);
-    $allStories = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Her kullanıcı için en son hikaye (Ana ekranda göstermek için)
-    $byUser = [];
-    foreach ($allStories as $s) {
-        if (!isset($byUser[$s['user_id']]) || strtotime($s['created_at']) > strtotime($byUser[$s['user_id']]['created_at'])) {
-            $byUser[$s['user_id']] = $s;
-        }
-    }
-    $stories = array_values($byUser);
+    $stmt->execute(['viewer_self' => $user_id, 'viewer_follow' => $user_id]);
+    $stories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 // Güvenlik fonksiyonu
@@ -32,30 +30,6 @@ if (!function_exists('e')) {
     function e($string) { return htmlspecialchars($string ?? '', ENT_QUOTES, 'UTF-8'); }
 }
 ?>
-
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Hikayeler</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-<link rel="stylesheet" href="/css/brand.css">
-
-<script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
-                colors: { primary: '#4f46e5', secondary: '#6366f1' }
-            }
-        }
-    }
-</script>
 
 <style>
 /* Akıcı Kaydırma Çubuğu */
@@ -73,17 +47,15 @@ if (!function_exists('e')) {
 /* Hikaye Halkası Gradienti */
 .story-ring { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
 
-body, html { height: 100%; overflow-x: hidden; background-color: #f8fafc; }
+body { overflow-x: hidden; }
 </style>
-</head>
-<body class="font-sans text-slate-900 bg-slate-50 dc-stories-page">
 
-<div class="py-5 px-4 bg-white/80 backdrop-blur-xl shadow-[0_4px_40px_rgba(0,0,0,0.03)] border-b border-slate-100">
+<section class="dc-stories-page py-5 px-4 bg-white/80 shadow-[0_4px_40px_rgba(0,0,0,0.03)] border-b border-slate-100" aria-label="Hikayeler">
   <div class="flex space-x-4 overflow-x-auto no-scrollbar pb-2 story-scroll-container">
     
     <?php if($user_id): ?>
     <div class="flex-shrink-0 text-center relative group cursor-pointer story-item">
-      <a href="#" class="block">
+      <a href="#tabContentStory" id="createStoryShortcut" class="block" aria-label="Yeni hikaye paylaş">
         <div class="relative w-[72px] h-[72px] rounded-full p-[2px] border-2 border-dashed border-slate-300 group-hover:border-primary transition-colors duration-300 mx-auto">
           <div class="w-full h-full rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-primary transition-colors relative overflow-hidden shadow-inner">
              <i class="fa-solid fa-plus text-2xl group-hover:scale-110 transition-transform"></i>
@@ -100,16 +72,16 @@ body, html { height: 100%; overflow-x: hidden; background-color: #f8fafc; }
                  : '/uploads/default-avatar.png';
     ?>
     <div class="flex-shrink-0 text-center story-item">
-      <a href="#" class="story-trigger block group" data-user="<?= e($s['user_id']) ?>">
+      <a href="#" class="story-trigger block group" data-user="<?= e($s['user_id']) ?>" aria-label="@<?= e($s['username']) ?> hikayelerini izle">
         <div class="relative w-[72px] h-[72px] rounded-full p-[3px] story-ring group-hover:scale-105 transition-transform duration-300 overflow-hidden shadow-md mx-auto">
-          <img src="<?= e($photo) ?>" class="w-full h-full object-cover rounded-full border-[3px] border-white">
+          <img src="<?= e($photo) ?>" alt="@<?= e($s['username']) ?> profil fotoğrafı" loading="lazy" decoding="async" width="72" height="72" class="w-full h-full object-cover rounded-full border-[3px] border-white">
         </div>
         <span class="text-[13px] mt-2 block truncate w-[76px] font-bold text-slate-700"><?= e($s['username']) ?></span>
       </a>
     </div>
     <?php endforeach; ?>
   </div>
-</div>
+</section>
 
 <div id="storyModal" class="fixed inset-0 z-[9999] hidden bg-black/95 backdrop-blur-2xl flex items-center justify-center transition-opacity duration-300">
   <div class="relative w-full h-full max-w-md mx-auto bg-black overflow-hidden shadow-2xl scale-up" id="storyWrapper">
@@ -210,6 +182,13 @@ let isPaused = false;
 let currentVideo = null;
 const myUserId = <?= $user_id ?: 0 ?>;
 
+document.getElementById('createStoryShortcut')?.addEventListener('click', event => {
+  event.preventDefault();
+  document.getElementById('tabBtnStory')?.click();
+  document.getElementById('npostComposer')?.scrollIntoView({behavior: 'smooth', block: 'center'});
+  document.getElementById('storyText')?.focus({preventScroll: true});
+});
+
 // Açma İşlemi
 document.querySelectorAll('.story-trigger').forEach(el => {
   el.addEventListener('click', async e => {
@@ -217,7 +196,8 @@ document.querySelectorAll('.story-trigger').forEach(el => {
     const uid = el.dataset.user;
     
     try {
-        const res = await fetch('actions/fetch_stories.php?user_id='+uid);
+        const res = await fetch('actions/fetch_stories.php?user_id='+encodeURIComponent(uid), {headers: {'Accept': 'application/json'}});
+        if (!res.ok) throw new Error('Hikayeler yüklenemedi.');
         const data = await res.json();
         if(!data || !data.stories || !data.stories.length) return;
         
@@ -359,7 +339,7 @@ function renderStory(i) {
       const res = await fetch('actions/delete_story.php', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: 'story_id='+encodeURIComponent(s.id)
+        body: new URLSearchParams({story_id: s.id, csrf_token: '<?= e($_SESSION['csrf_token'] ?? '') ?>'})
       });
       const data = await res.json();
       if(data.success) { location.reload(); } 
@@ -371,11 +351,10 @@ function renderStory(i) {
     deleteBtn.classList.add('hidden');
     viewersBtnWrapper.classList.add('hidden');
     
-    // İzlenmeyi sunucuya bildir (actions/view_story.php adlı bir dosyanız olmalı)
-    fetch('actions/view_story.php', {
+    fetch('actions/record_story_view.php', {
         method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: 'story_id='+encodeURIComponent(s.id)
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: JSON.stringify({story_id: s.id, csrf_token: '<?= e($_SESSION['csrf_token'] ?? '') ?>'})
     }).catch(e => console.log('İzlenme kaydedilemedi'));
   }
 }
@@ -505,5 +484,3 @@ function timeAgo(dateString) {
   return Math.floor(diff / 86400) + 'g';
 }
 </script>
-</body>
-</html>

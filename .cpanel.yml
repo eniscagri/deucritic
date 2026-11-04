@@ -2,12 +2,12 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/deucditiccom/public_html/
-    - test -r /home/deucditiccom/private/deucritic.php || { echo 'Create /home/deucditiccom/private/deucritic.php with rotated database credentials before deployment.'; exit 1; }
+    - test -r /home/deucditiccom/private/deucritic.php || { echo 'Create /home/deucditiccom/private/deucritic.php outside public_html before deployment.'; exit 1; }
     - /bin/mkdir -p "$DEPLOYPATH/includes"
     - /bin/mkdir -p "$DEPLOYPATH/actions"
     - /bin/cp -p -- includes/config.php "$DEPLOYPATH/includes/"
     - /bin/cp -p -- .htaccess "$DEPLOYPATH"
-    - /bin/cp -p -- actions/delete_story.php actions/create_topic.php actions/follow_action.php actions/login_action.php actions/react_entry.php actions/register_action.php actions/report_entry.php actions/upload_story.php "$DEPLOYPATH/actions/"
+    - /bin/cp -p -- actions/delete_story.php actions/fetch_stories.php actions/record_story_view.php actions/create_topic.php actions/follow_action.php actions/login_action.php actions/react_entry.php actions/register_action.php actions/report_entry.php actions/upload_story.php "$DEPLOYPATH/actions/"
     - /bin/cp -p -- 404.html "$DEPLOYPATH"
     - /bin/cp -p -- about.php "$DEPLOYPATH"
     - /bin/cp -p -- anaekran.php "$DEPLOYPATH"
