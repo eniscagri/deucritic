@@ -133,10 +133,10 @@ input { font-size: 16px !important; }
     <div class="w-full min-h-[100dvh] md:min-h-[650px] md:max-w-5xl md:h-auto bg-white md:rounded-[2.5rem] md:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] flex flex-col md:flex-row overflow-hidden relative z-10">
 
         <div class="w-full h-[45vh] md:h-auto md:w-5/12 relative group overflow-hidden flex-shrink-0">
-            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent z-10"></div>
+            <div class="dc-login-photo-shade absolute inset-0 z-10" aria-hidden="true"></div>
             <div class="absolute inset-0 bg-primary/10 mix-blend-overlay z-10"></div>
             
-            <img src="<?= $bg ?>" alt="Deucritic Background" class="absolute inset-0 w-full h-full object-cover transform scale-100 md:group-hover:scale-105 transition-transform duration-1000 ease-out">
+            <img src="<?= htmlspecialchars($bg, ENT_QUOTES, 'UTF-8') ?>" alt="DEÜ kampüsünden bir görünüm" class="absolute inset-0 w-full h-full object-cover" fetchpriority="high" onerror="this.onerror=null;this.src='/gorsel/bckg/bckgrondone.jpg';">
             
             <div class="absolute top-0 left-0 w-full p-6 md:p-10 z-20 flex justify-between items-center mt-4 md:mt-0">
                 <a href="index.php" class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 text-white hover:bg-white/30 transition shadow-sm">
@@ -147,7 +147,7 @@ input { font-size: 16px !important; }
 
             <div class="absolute bottom-12 md:bottom-10 left-0 w-full px-8 md:px-10 z-20">
                 <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-md text-white text-xs font-bold rounded-full border border-white/30 mb-4 shadow-sm">
-                    <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                    <span class="w-2 h-2 rounded-full bg-primary" aria-hidden="true"></span>
                     Kampüse Dönüş
                 </div>
                 <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-2 leading-tight drop-shadow-lg">

@@ -166,6 +166,8 @@ header.sticky {
   background: var(--dc-coral) !important;
   background-image: none !important;
 }
+.dc-login-photo-shade { background-color: rgb(29 53 47 / .38) !important; }
+.dc-register-art-panel { background: var(--dc-paper-deep) !important; }
 .dc-hero {
   position: relative;
   display: grid;

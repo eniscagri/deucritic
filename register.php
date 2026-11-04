@@ -163,12 +163,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="flex flex-col md:flex-row w-full max-w-5xl bg-white rounded-[2rem] shadow-2xl overflow-hidden my-4">
 
-    <div class="hidden md:flex md:w-5/12 bg-gradient-to-br from-primary/20 via-secondary/20 to-primary/10 items-center justify-center p-8 relative overflow-hidden">
-        <div class="absolute -top-16 -left-16 w-32 h-32 bg-primary/30 rounded-full animate-bounce-slow"></div>
-        <div class="relative z-10 text-center">
-            <h2 class="text-3xl font-extrabold text-dark mb-4">Topluluğa Katıl!</h2>
-            <p class="text-slate-600 mb-8 font-medium">DEÜ'nün özgür platformunda yerini al.</p>
-            <img src="/gorsel/register.png" alt="Welcome" class="w-full h-auto object-contain drop-shadow-xl">
+    <div class="dc-register-art-panel flex min-h-[170px] w-full md:min-h-0 md:w-5/12 items-center justify-center p-4 md:p-8 relative overflow-hidden">
+        <div class="relative z-10 flex w-full flex-row items-center justify-between gap-3 text-left md:flex-col md:gap-0 md:text-center">
+            <div>
+                <h2 class="text-lg sm:text-xl md:text-3xl font-extrabold text-dark mb-1 md:mb-4">Topluluğa Katıl!</h2>
+                <p class="text-slate-600 text-xs sm:text-sm md:text-base mb-0 md:mb-8 font-medium">DEÜ'nün özgür platformunda yerini al.</p>
+            </div>
+            <img src="/gorsel/register.png" alt="Deucritic'in eski ve yeni işaretini gösteren illüstrasyon" class="w-24 h-24 sm:w-28 sm:h-28 md:w-full md:h-auto md:max-h-[360px] object-contain" fetchpriority="high" onerror="this.onerror=null;this.src='/gorsel/deucritic-mark.svg';">
         </div>
     </div>
 
