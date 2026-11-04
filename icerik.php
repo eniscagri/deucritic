@@ -97,9 +97,12 @@ function timeAgoTr($datetime) {
             </p>
 
             <div class="pt-2">
-                <a href="badges.php" class="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-8 py-3.5 rounded-2xl font-bold text-[15px] transition-all hover:shadow-lg hover:shadow-cyan-500/30 hover:-translate-y-1 active:translate-y-0 w-full sm:w-auto">
-                    <i class="fa-solid fa-medal text-lg"></i>
-                    Rozetlerini Keşfet
+                <a href="badges.php" class="group inline-flex items-center justify-center gap-3 border border-[#1d352f] bg-[#1d352f] text-white hover:text-white px-6 py-3 rounded-xl font-bold text-[15px] transition-all duration-200 hover:border-[#b84834] hover:bg-[#b84834] hover:shadow-lg hover:shadow-[#1d352f]/15 hover:-translate-y-0.5 active:translate-y-0 w-full sm:w-auto">
+                    <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#e9c65a] text-[#1d352f]">
+                        <i class="fa-solid fa-medal text-base" aria-hidden="true"></i>
+                    </span>
+                    <span>Rozetlerini Keşfet</span>
+                    <i class="fa-solid fa-arrow-right text-sm transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true"></i>
                 </a>
             </div>
         </div>
