@@ -1,11 +1,6 @@
 <?php
 
-session_start();
 include 'includes/config.php';
-
-@ini_set('session.use_only_cookies', 1);
-@ini_set('session.cookie_httponly', 1);
-@ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
 
 
 if (empty($_SESSION['csrf_token'])) {

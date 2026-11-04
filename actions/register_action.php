@@ -1,10 +1,13 @@
 <?php
-session_start();
 require_once '../includes/config.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ../register.php');
     exit;
+}
+if (!hash_equals($_SESSION['csrf_token'] ?? '', (string) ($_POST['csrf_token'] ?? ''))) {
+    http_response_code(403);
+    exit('İstek doğrulanamadı.');
 }
 
 $username = trim($_POST['username'] ?? '');
@@ -36,7 +39,9 @@ $stmt = $pdo->prepare("INSERT INTO users (username, email, password_hash, school
 $stmt->execute([$username, $email, $hash, $school, $grade]);
 
 // Oturum aç
+session_regenerate_id(true);
 $_SESSION['user_id'] = $pdo->lastInsertId();
+$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
 // Anasayfaya yönlendir
 header('Location: ../index.php');

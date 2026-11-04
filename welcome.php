@@ -1,5 +1,4 @@
 <?php
-session_start();
 require_once 'includes/config.php';
 
 if (!isset($_SESSION['user_id'])) {
@@ -19,35 +18,43 @@ if (!$user) {
     exit;
 }
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!hash_equals($_SESSION['csrf_token'], (string) ($_POST['csrf_token'] ?? ''))) {
+        http_response_code(403);
+        exit('İstek doğrulanamadı. Sayfayı yenileyip tekrar deneyin.');
+    }
+
     $bio = trim($_POST['bio'] ?? '');
     $profilePhotoPath = $user['profile_photo'];
 
     if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] !== UPLOAD_ERR_NO_FILE) {
-        $allowed = ['jpg','jpeg','png','webp','gif'];
-        $ext = strtolower(pathinfo($_FILES['profile_photo']['name'], PATHINFO_EXTENSION));
+        $photo = $_FILES['profile_photo'];
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = isset($photo['tmp_name']) && is_uploaded_file($photo['tmp_name']) ? $finfo->file($photo['tmp_name']) : false;
+        $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp'];
 
-        if (!in_array($ext, $allowed)) {
-            $errors[] = "Sadece JPG, PNG, GIF veya WEBP formatlarını yükleyebilirsiniz.";
-        } elseif ($_FILES['profile_photo']['size'] > 5 * 1024 * 1024) { // Kullanıcı rahat etsin diye limit 5MB'a çıkarıldı
+        if ($photo['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($photo['tmp_name'])) {
+            $errors[] = "Görsel yüklenemedi. Lütfen yeniden deneyin.";
+        } elseif ($photo['size'] > 5 * 1024 * 1024) {
             $errors[] = "Dosya boyutu çok büyük, lütfen 5MB'ı geçmeyen bir fotoğraf seçin.";
+        } elseif (!isset($extensions[$mime]) || @getimagesize($photo['tmp_name']) === false) {
+            $errors[] = "Sadece geçerli JPG, PNG, GIF veya WEBP görselleri yükleyebilirsiniz.";
         } else {
             $uploadDir = __DIR__ . '/uploads/profile_photos/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
-
-            if (!empty($user['profile_photo']) && file_exists(__DIR__ . '/' . $user['profile_photo'])) {
-                @unlink(__DIR__ . '/' . $user['profile_photo']);
-            }
-
-            $newName = 'profile_' . $_SESSION['user_id'] . '_' . time() . '.' . $ext;
-            $uploadPath = $uploadDir . $newName;
-
-            if (!move_uploaded_file($_FILES['profile_photo']['tmp_name'], $uploadPath)) {
-                $errors[] = "Dosya yüklenirken sistemsel bir hata oluştu.";
+            if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+                $errors[] = "Görsel şu anda kaydedilemiyor.";
             } else {
-                $profilePhotoPath = 'uploads/profile_photos/' . $newName;
+                $newName = 'profile_' . (int) $_SESSION['user_id'] . '_' . bin2hex(random_bytes(16)) . '.' . $extensions[$mime];
+                $uploadPath = $uploadDir . $newName;
+                if (!move_uploaded_file($photo['tmp_name'], $uploadPath)) {
+                    $errors[] = "Dosya yüklenirken sistemsel bir hata oluştu.";
+                } else {
+                    $profilePhotoPath = 'uploads/profile_photos/' . $newName;
+                }
             }
         }
     }
@@ -129,6 +136,7 @@ $defaultAvatar = !empty($user['profile_photo'])
         <?php endif; ?>
 
         <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
             <!-- Profil Fotoğrafı Yükleme Alanı -->
             <div class="flex flex-col items-center justify-center mb-4">
                 <div class="relative group cursor-pointer">

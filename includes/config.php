@@ -2,25 +2,74 @@
 
 ob_start();
 
+error_reporting(E_ALL);
+ini_set('log_errors', '1');
+$isLocalEnvironment = strtolower((string) (getenv('APP_ENV') ?: 'production')) === 'local';
+ini_set('display_errors', $isLocalEnvironment ? '1' : '0');
+
 if (session_status() === PHP_SESSION_NONE) {
-    @session_start();
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.use_only_cookies', '1');
+    $isHttps = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== '' && strtolower((string) $_SERVER['HTTPS']) !== 'off';
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    session_start();
 }
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// Keep database secrets outside the document root and out of Git.
+$privateConfigPath = getenv('DEUCRITIC_CONFIG_FILE') ?: '';
+$configCandidates = array_filter([
+    $privateConfigPath,
+    __DIR__ . '/config.local.php',
+    '/home/deucditiccom/private/deucritic.php',
+]);
+$dbConfig = null;
+foreach ($configCandidates as $candidate) {
+    if (is_file($candidate) && is_readable($candidate)) {
+        $dbConfig = require $candidate;
+        break;
+    }
+}
 
-// 1. Veritabanı Bağlantısı
-$db_host = 'localhost';
-$db_name = 'deucditiccom_deucritic';
-$db_user = 'deucditiccom_eniscagri';      
-$db_pass = 'Enis07654607';          
+if (!is_array($dbConfig)) {
+    $dbConfig = [
+        'host' => getenv('DEUCRITIC_DB_HOST'),
+        'name' => getenv('DEUCRITIC_DB_NAME'),
+        'user' => getenv('DEUCRITIC_DB_USER'),
+        'pass' => getenv('DEUCRITIC_DB_PASS'),
+    ];
+}
+
+$db_host = trim((string) ($dbConfig['host'] ?? ''));
+$db_name = trim((string) ($dbConfig['name'] ?? ''));
+$db_user = trim((string) ($dbConfig['user'] ?? ''));
+$db_pass = (string) ($dbConfig['pass'] ?? '');
+if ($db_host === '' || $db_name === '' || $db_user === '' || $db_pass === '') {
+    error_log('Deucritic database configuration is missing.');
+    http_response_code(503);
+    exit('Site yapılandırması tamamlanmadı. Lütfen daha sonra tekrar deneyin.');
+}
 
 try {
-    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $pdo = new PDO(
+        "mysql:host=$db_host;dbname=$db_name;charset=utf8mb4",
+        $db_user,
+        $db_pass,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]
+    );
 } catch (PDOException $e) {
-    exit('Veritabanı bağlantı hatası: ' . $e->getMessage());
+    error_log('Deucritic database connection failed: ' . $e->getMessage());
+    http_response_code(503);
+    exit('Şu anda bağlantı sağlanamıyor. Lütfen daha sonra tekrar deneyin.');
 }
 
 if (empty($_SESSION['csrf_token'])) {
@@ -45,8 +94,11 @@ if ($isLoggedIn) {
         $gradeLevel = $user['grade_level'];
         $streakCount = $user['streak_count'];
 
-        $update_seen = $pdo->prepare("UPDATE users SET last_seen = CURRENT_TIMESTAMP WHERE id = ?");
-        $update_seen->execute([$userId]);
+        if (empty($_SESSION['last_seen_update']) || time() - (int) $_SESSION['last_seen_update'] >= 300) {
+            $update_seen = $pdo->prepare("UPDATE users SET last_seen = CURRENT_TIMESTAMP WHERE id = ?");
+            $update_seen->execute([$userId]);
+            $_SESSION['last_seen_update'] = time();
+        }
     } else {
         session_unset();
         session_destroy();

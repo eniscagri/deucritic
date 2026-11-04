@@ -27,7 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password_hash'])) {
+                session_regenerate_id(true);
                 $_SESSION['user_id'] = $user['id'];
+                $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
                 $update = $pdo->prepare("UPDATE users SET last_ip = ?, last_login = NOW() WHERE id = ?");
                 $update->execute([$user_ip, $user['id']]);
@@ -45,12 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Görsel havuzu
 $images = [
-    "/uploads/login/123312.jpg",
-    "/uploads/login/10346.jpg",
-    "/uploads/login/183193.jpg",
-    "/uploads/login/9737.jpg",
-    "/uploads/login/12165.jpg",
-    "/uploads/login/6502.jpg"
+    "/uploads/login/123312.jpg?v=20261104",
+    "/uploads/login/10346.jpg?v=20261104",
+    "/uploads/login/183193.jpg?v=20261104",
+    "/uploads/login/9737.jpg?v=20261104",
+    "/uploads/login/12165.jpg?v=20261104",
+    "/uploads/login/6502.jpg?v=20261104"
 ];
 $bg = $images[array_rand($images)];
 ?>

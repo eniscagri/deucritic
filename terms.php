@@ -1,6 +1,4 @@
 <?php
-session_start();
-
 // Dil seçimi
 $lang = $_GET['lang'] ?? 'tr';
 ?>

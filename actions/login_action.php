@@ -1,10 +1,13 @@
 <?php
-session_start();
 require_once '../includes/config.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ../login.php');
     exit;
+}
+if (!hash_equals($_SESSION['csrf_token'] ?? '', (string) ($_POST['csrf_token'] ?? ''))) {
+    http_response_code(403);
+    exit('İstek doğrulanamadı.');
 }
 
 $email = trim($_POST['email'] ?? '');
@@ -21,7 +24,9 @@ $stmt->execute([$email]);
 $user = $stmt->fetch();
 
 if ($user && password_verify($password, $user['password_hash'])) {
+    session_regenerate_id(true);
     $_SESSION['user_id'] = $user['id'];
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     header('Location: ../index.php');
     exit;
 } else {

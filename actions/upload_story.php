@@ -44,20 +44,27 @@ try {
         $allowed_videos = ['video/mp4','video/webm','video/ogg'];
         $allowed_types = array_merge($allowed_images, $allowed_videos);
 
-        $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
         $max_size = 20 * 1024 * 1024; // 20 MB sınır
+        $mime_extensions = [
+            'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp',
+            'video/mp4' => 'mp4', 'video/webm' => 'webm', 'video/ogg' => 'ogv',
+        ];
 
         if ($f['size'] > $max_size) {
             throw new RuntimeException('Dosya çok büyük (maksimum 20 MB).');
         }
 
-        if (!in_array($mime, $allowed_types, true)) {
+        if (!in_array($mime, $allowed_types, true) || !isset($mime_extensions[$mime]) || !is_uploaded_file($f['tmp_name'])) {
             throw new RuntimeException('Yalnızca resim veya video yükleyebilirsiniz.');
+        }
+
+        if (in_array($mime, $allowed_images, true) && @getimagesize($f['tmp_name']) === false) {
+            throw new RuntimeException('Geçerli bir görsel dosyası yükleyin.');
         }
 
         $media_type = in_array($mime, $allowed_images, true) ? 'image' : 'video';
 
-        $filename = sprintf('story_%s_%s.%s', $user_id, uniqid('', true), $ext);
+        $filename = sprintf('story_%s_%s.%s', $user_id, bin2hex(random_bytes(16)), $mime_extensions[$mime]);
         $target = $upload_dir . DIRECTORY_SEPARATOR . $filename;
 
         if (!move_uploaded_file($f['tmp_name'], $target)) {

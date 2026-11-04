@@ -418,6 +418,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         <form id="form" class="flex items-end gap-2 md:gap-3 max-w-5xl mx-auto bg-slate-50/80 p-1.5 md:p-2.5 rounded-[1.5rem] md:rounded-[2rem] border border-slate-200 focus-within:bg-white focus-within:ring-[3px] focus-within:ring-primary/15 transition-all shadow-sm relative">
                             <input type="hidden" name="conversation_id" value="<?= $current_convo ?>">
                             <input type="hidden" name="receiver_id" value="<?= $active ?>">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                             
                             <input type="file" id="fileInput" name="photo" class="hidden" accept="image/*">
                             <button type="button" onclick="document.getElementById('fileInput').click()" class="w-10 h-10 md:w-11 md:h-11 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-indigo-50 rounded-full transition-colors shrink-0 active:scale-95">
@@ -572,6 +573,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         const formData = new FormData();
         formData.append('conversation_id', '<?= $current_convo ?>');
         formData.append('receiver_id', '<?= $active ?>');
+        formData.append('csrf_token', document.querySelector('#form [name="csrf_token"]').value);
         formData.append('message', text);
         fetch("send_message.php", { method: "POST", body: formData }).then(() => load());
     }

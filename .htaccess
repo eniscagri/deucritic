@@ -5,6 +5,22 @@ RewriteBase /
 
 DirectoryIndex index.php
 
+Options -Indexes
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Keep source/configuration files and executable uploads out of public access.
+RewriteRule ^includes(?:/|$) - [F,L,NC]
+RewriteRule ^admin\.php$ - [F,L,NC]
+RewriteRule ^uploads/(?:.*/)?[^/]+\.(?:php[0-9]?|phtml|phar)$ - [F,L,NC]
+RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L,NC]
+RewriteRule (^|/)(?:error_log|ftpquota)$ - [F,L,NC]
+RewriteRule ^(?:db\.sql|PHPMailer-master\.zip|.*\.(?:sql|log|ini|bak|old|swp)|composer\.(?:json|lock))$ - [F,L,NC]
+
 RewriteCond %{THE_REQUEST} \s/+uye\.php\?user=([^\s&]+) [NC]
 RewriteRule ^uye\.php$ /@%1? [R=301,L]
 
@@ -30,14 +46,29 @@ ExpiresByType image/jpg "access plus 1 year"
 ExpiresByType image/jpeg "access plus 1 year"
 ExpiresByType image/png "access plus 1 year"
 ExpiresByType image/webp "access plus 1 year"
+ExpiresByType image/svg+xml "access plus 1 year"
 
 ExpiresByType text/css "access plus 1 month"
 ExpiresByType application/javascript "access plus 1 month"
 
 ExpiresByType font/woff2 "access plus 1 year"
+ExpiresByType application/manifest+json "access plus 1 week"
 </IfModule>
 
-ErrorDocument 404 /404.php
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json application/xml image/svg+xml
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(?:css|js)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+    <FilesMatch "\.(?:html|php)$">
+        Header set Cache-Control "no-store, private"
+    </FilesMatch>
+</IfModule>
+
+ErrorDocument 404 /404.html
 
 # php -- BEGIN cPanel-generated handler, do not edit
 # Set the “ea-php82” package as the default “PHP” programming language.

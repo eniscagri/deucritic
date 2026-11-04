@@ -300,6 +300,7 @@ tailwind.config = {
         <img id="photoPreview" src="<?= htmlspecialchars($user['profile_photo'] ?? 'uploads/default-avatar.png') ?>" class="w-full h-full object-cover">
     </div>
     <form id="photoForm" action="update_photo.php" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
       <label class="block w-full border-2 border-dashed border-slate-200 text-slate-500 font-bold hover:text-primary hover:border-primary hover:bg-primary/5 rounded-xl cursor-pointer p-3 mb-6 transition-colors">
           <i class="fa-solid fa-image mr-2"></i> Yeni Fotoğraf Seç
           <input type="file" name="profile_photo" accept="image/*" class="hidden" onchange="previewPhoto(event)">

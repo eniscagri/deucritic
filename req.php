@@ -1,5 +1,4 @@
 <?php
-session_start();
 include 'includes/config.php'; // içinde $conn var (mysqli)
 
 if (empty($_SESSION['csrf_token'])) {
