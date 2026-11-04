@@ -306,6 +306,30 @@ header.sticky {
 .dc-story-upload #submitBtn:hover { background: var(--dc-coral) !important; }
 .dc-story-upload #clearBtn { color: var(--dc-coral) !important; }
 
+/* Preserve readable foreground colors on interactive, filled controls. */
+a[class~="text-white"]:hover,
+a[class~="hover:text-white"]:hover,
+button[class~="text-white"]:hover,
+button[class~="hover:text-white"]:hover,
+.dc-search-page .dc-search-form button:hover,
+.dc-story-upload #submitBtn:hover,
+.dc-profile-page button[class*="bg-dark"]:hover,
+.dc-profile-page button[class*="bg-slate-900"]:hover,
+.dc-profile-page button[class*="bg-primary"]:hover,
+.dc-dm-page a[class*="hover:bg-primary"]:hover,
+.dc-dm-page button[class*="hover:bg-primary"]:hover,
+.dc-dm-page a[class*="from-indigo"]:hover,
+.dc-dm-page button[class*="from-indigo"]:hover {
+  color: var(--dc-surface) !important;
+}
+.dc-search-page .dc-search-form button:hover,
+.dc-story-upload #submitBtn:hover { background-color: var(--dc-ink) !important; }
+.dc-search-page .dc-search-form button:hover { background-color: var(--dc-coral) !important; }
+.dc-dm-page a[class*="hover:bg-primary"]:hover,
+.dc-dm-page button[class*="hover:bg-primary"]:hover { background-color: var(--dc-coral) !important; }
+.dc-dm-page a[class*="from-indigo"]:hover,
+.dc-dm-page button[class*="from-indigo"]:hover { background: var(--dc-ink) !important; }
+
 @media (max-width: 640px) {
   .dc-search-main { padding: 20px 14px !important; }
   .dc-search-form button { min-width: 48px; padding-inline: 14px !important; }
