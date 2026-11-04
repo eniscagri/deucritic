@@ -1,0 +1,90 @@
+{
+  "id": "/",
+  "name": "Deucritic Sözlük",
+  "short_name": "Deucritic",
+  "description": "DEÜ öğrencilerinden eleştiriler, fikirler ve tartışmalar. Akademik ve sosyal eleştiri platformu.",
+  "start_url": "/index.php?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "portrait",
+  "background_color": "#111111",
+  "theme_color": "#cca43b",
+  "lang": "tr-TR",
+  "dir": "ltr",
+
+  "categories": [
+    "education",
+    "social",
+    "communication"
+  ],
+
+  "prefer_related_applications": false,
+
+  "icons": [
+    {
+      "src": "https://deucritic.com/gorsel/72x72logo.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://deucritic.com/gorsel/96x96logo.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://deucritic.com/gorsel/128x128logo.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://deucritic.com/gorsel/192x192logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://deucritic.com/gorsel/512x512logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+
+
+  "shortcuts": [
+    {
+      "name": "Yeni Onep Gir",
+      "short_name": "Onep",
+      "description": "Yeni paylaşım oluştur",
+      "url": "/npost.php",
+      "icons": [
+        {
+          "src": "https://deucritic.com/gorsel/192x192logo.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Profilim",
+      "short_name": "Profil",
+      "description": "Profil sayfanı görüntüle",
+      "url": "/profile.php",
+      "icons": [
+        {
+          "src": "https://deucritic.com/gorsel/192x192logo.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

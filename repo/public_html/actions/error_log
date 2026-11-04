@@ -1,0 +1,12 @@
+[04-Jul-2025 00:03:07 UTC] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in /home/deucditiccom/public_html/includes/config.php on line 18
+[04-Jul-2025 17:12:18 UTC] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in /home/deucditiccom/public_html/includes/config.php on line 18
+[30-Sep-2025 18:13:24 UTC] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in /home/deucditiccom/public_html/includes/config.php on line 18
+[05-Oct-2025 22:01:36 UTC] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in /home/deucditiccom/public_html/includes/config.php on line 18
+[05-Oct-2025 22:05:14 UTC] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in /home/deucditiccom/public_html/includes/config.php on line 18
+[05-Oct-2025 22:21:22 UTC] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in /home/deucditiccom/public_html/includes/config.php on line 18
+[05-Oct-2025 22:21:29 UTC] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in /home/deucditiccom/public_html/includes/config.php on line 18
+[05-Oct-2025 22:22:09 UTC] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in /home/deucditiccom/public_html/includes/config.php on line 18
+[17-Oct-2025 00:51:24 UTC] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in /home/deucditiccom/public_html/includes/config.php on line 18
+[17-Oct-2025 23:44:17 UTC] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in /home/deucditiccom/public_html/includes/config.php on line 18
+[19-Oct-2025 00:13:32 UTC] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in /home/deucditiccom/public_html/includes/config.php on line 18
+[19-Oct-2025 02:46:12 UTC] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in /home/deucditiccom/public_html/includes/config.php on line 18
