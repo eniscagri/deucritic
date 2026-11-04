@@ -2,7 +2,7 @@
   action="actions/upload_story.php" 
   method="POST" 
   enctype="multipart/form-data" 
-  class="bg-white/80 backdrop-blur-xl p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 space-y-6 max-w-md mx-auto mt-6 transition-all duration-300 relative"
+  class="dc-story-upload bg-white/80 backdrop-blur-xl p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 space-y-6 max-w-md mx-auto mt-6 transition-all duration-300 relative"
   id="storyUploadForm"
 >
   <input type="hidden" name="csrf_token" value="<?= e($_SESSION['csrf_token']) ?>">
@@ -22,7 +22,7 @@
   <div>
     <div 
       id="dropArea"
-      class="group relative mt-2 border-2 border-dashed border-gray-200 hover:border-blue-400 hover:bg-blue-50/30 rounded-2xl p-4 text-center transition-all duration-300 cursor-pointer min-h-[180px] flex flex-col items-center justify-center overflow-hidden bg-gray-50/50"
+      class="dc-story-drop group relative mt-2 border-2 border-dashed border-gray-200 hover:border-blue-400 hover:bg-blue-50/30 rounded-2xl p-4 text-center transition-all duration-300 cursor-pointer min-h-[180px] flex flex-col items-center justify-center overflow-hidden bg-gray-50/50"
     >
       <input 
         type="file" 
@@ -50,7 +50,7 @@
   </div>
 
   <div class="relative">
-    <textarea 
+  <textarea 
       name="text_content" 
       maxlength="300" 
       rows="2"

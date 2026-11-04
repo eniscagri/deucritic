@@ -272,7 +272,7 @@ document.addEventListener('keydown', (e) => {
 </style>
     <link rel="stylesheet" href="/css/brand.css">
 </head>
-<body class="text-slate-800 antialiased selection:bg-primary/20 selection:text-primary">
+<body class="text-slate-800 antialiased selection:bg-primary/20 selection:text-primary dc-profile-page">
 <?php include 'header.php'; ?>
 
 

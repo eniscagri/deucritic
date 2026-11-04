@@ -44,23 +44,27 @@ function getProfilePhoto($photo) {
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/brand.css">
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen dc-search-page">
     <?php include __DIR__ . '/header.php'; ?>
 
-    <main class="max-w-3xl mx-auto p-6">
-        <h1 class="text-2xl font-bold mb-4">Arama Sonuçları</h1>
-
-        <!-- Arama kutusu -->
-        <form method="GET" class="mb-6 flex gap-2">
-            <input type="text" name="q" value="<?= htmlspecialchars($q) ?>" placeholder="Kullanıcı adı veya bio ara..." class="flex-1 p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary">
-            <button type="submit" class="bg-primary text-white px-4 py-3 rounded-xl hover:bg-cyan-600 transition">Ara</button>
+    <main class="dc-search-main max-w-3xl mx-auto p-6">
+        <section class="dc-search-intro">
+            <p class="dc-label">Kampüsten insanlar</p>
+            <h1 class="text-2xl font-bold mb-2">Aradığın kişiyi bul</h1>
+            <p>Öğrenci topluluğundaki profilleri kullanıcı adına veya biyografilerine göre keşfet.</p>
+        </section>
+        <form method="GET" class="dc-search-form mb-6 flex gap-2" role="search">
+            <label class="sr-only" for="people-search">Kullanıcı ara</label>
+            <input id="people-search" type="search" name="q" value="<?= htmlspecialchars($q, ENT_QUOTES, 'UTF-8') ?>" placeholder="Kullanıcı adı veya biyografi ara..." class="flex-1 p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary" autocomplete="off">
+            <button type="submit" class="bg-primary text-white px-4 py-3 rounded-xl hover:bg-cyan-600 transition"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Ara</span></button>
         </form>
 
         <?php if ($q === ''): ?>
-            <div class="p-4 bg-white rounded-xl shadow text-gray-600">Bir şey aramak için yukarıdaki kutuyu kullan.</div>
+            <div class="dc-search-empty p-4 bg-white rounded-xl shadow text-gray-600"><span class="dc-search-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span><strong>Keşfe hazır mısın?</strong><p>Bir kullanıcı adı ya da ilgi alanı yazarak başla.</p></div>
         <?php elseif (empty($results)): ?>
-            <div class="p-4 bg-white rounded-xl shadow text-gray-600">Sonuç bulunamadı.</div>
+            <div class="dc-search-empty p-4 bg-white rounded-xl shadow text-gray-600"><span class="dc-search-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span><strong>Bu aramayla eşleşme yok</strong><p>Yazımı kontrol et veya daha kısa bir kelime dene.</p></div>
         <?php else: ?>
+            <p class="dc-search-count"><?= count($results) ?> profil bulundu</p>
             <ul class="space-y-4">
                 <?php foreach ($results as $r): 
                     $profilePhoto = getProfilePhoto($r['profile_photo']);

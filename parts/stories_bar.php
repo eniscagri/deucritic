@@ -44,6 +44,7 @@ if (!function_exists('e')) {
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<link rel="stylesheet" href="/css/brand.css">
 
 <script>
     tailwind.config = {
@@ -75,7 +76,7 @@ if (!function_exists('e')) {
 body, html { height: 100%; overflow-x: hidden; background-color: #f8fafc; }
 </style>
 </head>
-<body class="font-sans text-slate-900 bg-slate-50">
+<body class="font-sans text-slate-900 bg-slate-50 dc-stories-page">
 
 <div class="py-5 px-4 bg-white/80 backdrop-blur-xl shadow-[0_4px_40px_rgba(0,0,0,0.03)] border-b border-slate-100">
   <div class="flex space-x-4 overflow-x-auto no-scrollbar pb-2 story-scroll-container">
