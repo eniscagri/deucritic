@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/includes/i18n.php';
+
 // uyari.php
 
 // Sakıncalı konular listesi: Türkiye + Dünya + Genel

@@ -235,12 +235,18 @@ if($user_id){
 
         <nav class="hidden lg:flex items-center p-1.5 bg-slate-100/50 backdrop-blur-md rounded-2xl border border-slate-200/50">
             <a href="index.php" class="nav-pill <?= $active=='home' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50' ?>">Ana Sayfa</a>
+            <a href="tanitim.php" class="nav-pill <?= $active=='promo' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50' ?>">Tanıtım</a>
             <a href="about.php" class="nav-pill <?= $active=='about' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50' ?>">Biz Kimiz?</a>
             <a href="req.php" class="nav-pill <?= $active=='req' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50' ?>">Geliştirin</a>
             <a href="sss.php" class="nav-pill <?= $active=='sss' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50' ?>">S.S.S</a>
         </nav>
 
         <div class="flex items-center gap-2 sm:gap-3">
+
+            <div class="flex items-center gap-0.5 rounded-xl border border-slate-200 bg-white p-1 text-[10px] font-black tracking-wider" aria-label="Language">
+                <a href="<?= htmlspecialchars(dc_lang_url('tr'), ENT_QUOTES, 'UTF-8') ?>" lang="tr" class="px-2 py-1 rounded-lg <?= dc_lang()==='tr' ? 'bg-[#1d352f] text-white' : 'text-slate-500 hover:text-slate-800' ?>">TR</a>
+                <a href="<?= htmlspecialchars(dc_lang_url('en'), ENT_QUOTES, 'UTF-8') ?>" lang="en" class="px-2 py-1 rounded-lg <?= dc_lang()==='en' ? 'bg-[#1d352f] text-white' : 'text-slate-500 hover:text-slate-800' ?>">EN</a>
+            </div>
             
             <button type="button" aria-label="Aramayı aç" :aria-expanded="searchOpen.toString()" @click="searchOpen = !searchOpen" 
                 class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 border border-slate-200 hover:bg-white hover:text-[#b84834] hover:shadow-sm transition-all focus:outline-none">
@@ -384,6 +390,7 @@ if($user_id){
 
         <div class="space-y-6 mt-6 flex-1">
             <a href="index.php" class="mobile-nav-link <?= $active=='home' ? 'text-dark' : 'text-slate-300' ?>">Ana Sayfa</a>
+            <a href="tanitim.php" class="mobile-nav-link <?= $active=='promo' ? 'text-dark' : 'text-slate-300' ?>">Tanıtım</a>
             <a href="about.php" class="mobile-nav-link <?= $active=='about' ? 'text-dark' : 'text-slate-300' ?>">Biz Kimiz?</a>
             <a href="req.php" class="mobile-nav-link <?= $active=='req' ? 'text-dark' : 'text-slate-300' ?>">Geliştirin</a>
             <a href="sss.php" class="mobile-nav-link <?= $active=='sss' ? 'text-dark' : 'text-slate-300' ?>">S.S.S</a>

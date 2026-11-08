@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/includes/i18n.php';
+
 require_once __DIR__ . '/includes/config.php';
 
 $q = trim(substr((string) ($_GET['q'] ?? ''), 0, 100));
@@ -59,9 +61,9 @@ function getProfilePhoto($photo) {
             <ul class="space-y-3 mb-8">
               <?php foreach ($topicResults as $topic): ?>
                 <li><a href="topic.php?id=<?= (int) $topic['id'] ?>" class="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                  <p class="font-bold text-gray-900"><?= htmlspecialchars($topic['title'], ENT_QUOTES, 'UTF-8') ?></p>
-                  <p class="mt-1 text-sm text-gray-600 line-clamp-2"><?= htmlspecialchars($topic['description'] ?? '', ENT_QUOTES, 'UTF-8') ?></p>
-                  <span class="mt-2 block text-xs font-semibold text-gray-400">@<?= htmlspecialchars($topic['username'], ENT_QUOTES, 'UTF-8') ?></span>
+                  <p data-dc-user-content class="font-bold text-gray-900"><?= htmlspecialchars($topic['title'], ENT_QUOTES, 'UTF-8') ?></p>
+                  <p data-dc-user-content class="mt-1 text-sm text-gray-600 line-clamp-2"><?= htmlspecialchars($topic['description'] ?? '', ENT_QUOTES, 'UTF-8') ?></p>
+                  <span data-dc-user-content class="mt-2 block text-xs font-semibold text-gray-400">@<?= htmlspecialchars($topic['username'], ENT_QUOTES, 'UTF-8') ?></span>
                 </a></li>
               <?php endforeach; ?>
             </ul>
@@ -78,8 +80,8 @@ function getProfilePhoto($photo) {
                             <div class="flex items-center gap-4">
                                 <img src="<?= htmlspecialchars($profilePhoto) ?>" alt="<?= htmlspecialchars($r['username']) ?> profil fotoğrafı" class="w-14 h-14 rounded-full object-cover flex-shrink-0">
                                 <div class="flex-1">
-                                    <p class="font-semibold text-gray-900">@<?= htmlspecialchars($r['username']) ?></p>
-                                    <p class="text-gray-500 text-sm line-clamp-2"><?= htmlspecialchars($r['bio'] ?? '') ?></p>
+                                    <p data-dc-user-content class="font-semibold text-gray-900">@<?= htmlspecialchars($r['username']) ?></p>
+                                    <p data-dc-user-content class="text-gray-500 text-sm line-clamp-2"><?= htmlspecialchars($r['bio'] ?? '') ?></p>
                                 </div>
                             </div>
                         </a>

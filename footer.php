@@ -17,6 +17,7 @@
                 <h4 class="font-bold text-gray-900 uppercase tracking-widest text-xs">Platform</h4>
                 <ul class="space-y-2 text-sm">
                     <li><a href="index.php" class="text-gray-500 hover:text-primary transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px]"></i> Baba Sayfa</a></li>
+                    <li><a href="tanitim.php" class="text-gray-500 hover:text-primary transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px]"></i> Tanıtım</a></li>
                     <li><a href="paper.php" class="text-gray-500 hover:text-primary transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px]"></i> Haberler & Paper</a></li>
                     <li><a href="req.php" class="text-gray-500 hover:text-primary transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px]"></i> Geliştirme Talebi</a></li>
                     <li><a href="sss.php" class="text-gray-500 hover:text-primary transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px]"></i> Sıkça Sorulanlar</a></li>

@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/includes/i18n.php';
+
 require_once 'includes/config.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();

@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/includes/i18n.php';
+
 $url = isset($_GET['url']) ? $_GET['url'] : '';
 if (empty($url)) die('Geçersiz bağlantı.');
 

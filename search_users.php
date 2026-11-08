@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/includes/i18n.php';
+
 include 'includes/config.php';
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -106,12 +108,12 @@ if (isset($_GET['start_chat'])) {
                                 <img src="<?= $av ?>" class="w-12 h-12 rounded-full object-cover shadow-sm">
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-1">
-                                        <h3 class="font-bold text-slate-800 group-hover:text-indigo-700"><?= htmlspecialchars($u['username'] ?? '') ?></h3>
+                                        <h3 class="font-bold text-slate-800 group-hover:text-indigo-700"><span data-dc-user-content><?= htmlspecialchars($u['username'] ?? '') ?></span></h3>
                                         <?php if($u['isverified']): ?>
                                             <i class="fa-solid fa-circle-check text-blue-500 text-[12px]"></i>
                                         <?php endif; ?>
                                     </div>
-                                    <p class="text-[13px] text-slate-500 truncate"><?= htmlspecialchars($u['school'] ?? 'Dokuz Eylül Üniversitesi') ?></p>
+                                    <p data-dc-user-content class="text-[13px] text-slate-500 truncate"><?= htmlspecialchars($u['school'] ?? 'Dokuz Eylül Üniversitesi') ?></p>
                                 </div>
                                 <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-indigo-600 group-hover:text-white transition-all">
                                     <i class="fa-solid fa-comment-dots text-sm"></i>

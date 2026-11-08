@@ -1,3 +1,6 @@
+<?php
+require_once __DIR__ . '/includes/i18n.php';
+?>
 <!DOCTYPE html>
 <html lang="tr">
 <head>

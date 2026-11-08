@@ -16,6 +16,9 @@
         <a href="index.php" class="px-4 py-2 rounded-xl text-sm font-bold text-gray-500 hover:text-primary hover:bg-white transition-all flex items-center gap-2">
           <span>🏠</span> Baba Sayfa
         </a>
+        <a href="tanitim.php" class="px-4 py-2 rounded-xl text-sm font-bold text-gray-500 hover:text-primary hover:bg-white transition-all flex items-center gap-2">
+          <span>✦</span> Tanıtım
+        </a>
         <a href="about.php" class="px-4 py-2 rounded-xl text-sm font-bold text-gray-500 hover:text-primary hover:bg-white transition-all flex items-center gap-2">
           <span>🧠</span> Biz Kimiz?
         </a>
@@ -41,6 +44,10 @@
           </a>
         <?php endif; ?>
       </div>
+      <div class="ml-2 flex items-center gap-0.5 rounded-xl border border-gray-200 bg-white p-1 text-[10px] font-black tracking-wider" aria-label="Language">
+        <a href="<?= htmlspecialchars(dc_lang_url('tr'), ENT_QUOTES, 'UTF-8') ?>" lang="tr" class="px-2 py-1 rounded-lg <?= dc_lang()==='tr' ? 'bg-[#1d352f] text-white' : 'text-gray-500 hover:text-gray-900' ?>">TR</a>
+        <a href="<?= htmlspecialchars(dc_lang_url('en'), ENT_QUOTES, 'UTF-8') ?>" lang="en" class="px-2 py-1 rounded-lg <?= dc_lang()==='en' ? 'bg-[#1d352f] text-white' : 'text-gray-500 hover:text-gray-900' ?>">EN</a>
+      </div>
       <form action="search.php" method="get" role="search" class="ml-3 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-2 py-1 shadow-sm focus-within:border-[#b84834] focus-within:ring-2 focus-within:ring-[#b84834]/10">
         <label class="sr-only" for="header-u-search">Deucritic'te ara</label>
         <input id="header-u-search" type="search" name="q" placeholder="Kampüste ara" class="w-28 xl:w-40 border-0 bg-transparent p-1.5 text-sm font-medium text-gray-700 outline-none placeholder:text-gray-400 focus:ring-0" autocomplete="off">
@@ -49,6 +56,10 @@
     </nav>
 
     <div class="lg:hidden flex items-center gap-3">
+        <div class="flex items-center gap-0.5 rounded-xl border border-gray-200 bg-white p-1 text-[10px] font-black tracking-wider" aria-label="Language">
+          <a href="<?= htmlspecialchars(dc_lang_url('tr'), ENT_QUOTES, 'UTF-8') ?>" lang="tr" class="px-2 py-1 rounded-lg <?= dc_lang()==='tr' ? 'bg-[#1d352f] text-white' : 'text-gray-500 hover:text-gray-900' ?>">TR</a>
+          <a href="<?= htmlspecialchars(dc_lang_url('en'), ENT_QUOTES, 'UTF-8') ?>" lang="en" class="px-2 py-1 rounded-lg <?= dc_lang()==='en' ? 'bg-[#1d352f] text-white' : 'text-gray-500 hover:text-gray-900' ?>">EN</a>
+        </div>
         <a href="search.php" aria-label="Ara" title="Ara" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-[#1d352f] hover:bg-[#b84834] hover:text-white"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></a>
         <?php if (empty($_SESSION['user_id'])): ?>
             <a href="register.php" class="text-[10px] font-black bg-primary text-white px-3 py-2 rounded-xl uppercase tracking-tighter shadow-md">✨ Katıl</a>
@@ -65,6 +76,9 @@
     <div class="px-4 py-6 space-y-3">
       <a href="index.php" class="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 text-gray-900 font-bold hover:bg-primary/10 hover:text-primary transition-all">
         <span class="text-xl">🏠</span> Baba Sayfa
+      </a>
+      <a href="tanitim.php" class="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 text-gray-900 font-bold hover:bg-primary/10 hover:text-primary transition-all">
+        <span class="text-xl">✦</span> Tanıtım
       </a>
       <a href="about.php" class="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 text-gray-900 font-bold hover:bg-primary/10 hover:text-primary transition-all">
         <span class="text-xl">🧠</span> Biz Kimiz?

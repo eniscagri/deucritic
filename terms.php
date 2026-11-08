@@ -1,6 +1,8 @@
 <?php
+require_once __DIR__ . '/includes/i18n.php';
+
 // Dil seçimi
-$lang = $_GET['lang'] ?? 'tr';
+$lang = isset($_GET['lang']) && in_array($_GET['lang'], ['tr', 'en'], true) ? $_GET['lang'] : dc_lang();
 ?>
 
 <!DOCTYPE html>
@@ -32,7 +34,7 @@ function toggleSection(id){
     <!-- Başlık ve dil seçimi -->
     <div class="flex justify-between items-center mb-8">
         <h1 class="text-3xl font-bold text-gray-900"><?php echo $lang=='tr' ? 'Kullanım Koşulları' : 'Terms of Use'; ?></h1>
-        <div class="flex gap-4">
+        <div class="flex gap-4" aria-label="Language">
             <a href="?lang=tr" class="<?php echo $lang=='tr'?'active-lang':''; ?> text-blue-600">TR</a>
             <a href="?lang=en" class="<?php echo $lang=='en'?'active-lang':''; ?> text-blue-600">EN</a>
         </div>

@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/includes/i18n.php';
+
 require_once 'includes/config.php';
 require_once 'includes/functions.php';
 
@@ -147,14 +149,14 @@ tailwind.config = {
 
             <div class="flex-1 pt-2 sm:pt-16 sm:pb-2">
                 <h1 class="text-2xl sm:text-3xl font-black text-dark tracking-tight flex items-center gap-2 flex-wrap">
-                    <?= htmlspecialchars($user['username']) ?>
+                    <span data-dc-user-content><?= htmlspecialchars($user['username']) ?></span>
                     <?php if (!empty($user['isverified']) && $user['isverified'] == 1): ?>
                         <img src="https://img.icons8.com/color/48/verified-badge.png" class="w-6 h-6 inline-block" title="Doğrulanmış Kullanıcı">
                     <?php endif; ?>
                 </h1>
                 
                 <p class="text-slate-500 text-sm mt-1 font-medium leading-relaxed max-w-2xl italic">
-                    "<?= nl2br(htmlspecialchars($user['bio'] ?: 'Henüz bio eklenmemiş.')) ?>"
+                    <span data-dc-user-content>"<?= nl2br(htmlspecialchars($user['bio'] ?: 'Henüz bio eklenmemiş.')) ?>"</span>
                 </p>
                 
                 <?php
@@ -257,9 +259,9 @@ tailwind.config = {
                                 </div>
                                 <div class="mt-3 pl-14 md:pl-0 text-dark">
                                     <h5 class="font-extrabold text-base mb-1.5">
-                                        <a href="topic.php?id=<?= $entry['topic_id'] ?>" class="hover:text-primary transition-colors"><?= htmlspecialchars($entry['title']) ?></a>
+                                        <a data-dc-user-content href="topic.php?id=<?= $entry['topic_id'] ?>" class="hover:text-primary transition-colors"><?= htmlspecialchars($entry['title']) ?></a>
                                     </h5>
-                                    <p class="text-sm font-medium leading-relaxed text-slate-600 break-words">
+                                    <p data-dc-user-content class="text-sm font-medium leading-relaxed text-slate-600 break-words">
                                         <?= nl2br(htmlspecialchars(mb_strimwidth($entry['content'],0,350,'...'))) ?>
                                     </p>
                                     <a href="topic.php?id=<?= $entry['topic_id'] ?>" class="text-primary text-sm font-bold hover:underline mt-2 inline-block">Devamını Oku &rarr;</a>

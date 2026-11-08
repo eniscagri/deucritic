@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/includes/i18n.php';
+
 require_once 'includes/config.php';
 require_once 'includes/functions.php';
 
@@ -352,7 +354,7 @@ document.addEventListener('keydown', (e) => {
 
         <div class="flex-1 pt-2 sm:pt-20">
             <div class="flex items-center gap-2 mb-1.5">
-                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none"><?= e($user['username']) ?></h1>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none"><span data-dc-user-content><?= e($user['username']) ?></span></h1>
                 <?php if($user['is_verified'] ?? false): ?>
                     <i class="fa-solid fa-circle-check text-primary text-xl" title="Onaylı Üye"></i>
                 <?php endif; ?>
@@ -360,7 +362,7 @@ document.addEventListener('keydown', (e) => {
 
             <?php if(!empty($user['bio'])): ?>
                 <p class="text-slate-500 text-[15px] font-medium leading-relaxed max-w-xl mb-4 line-clamp-2">
-                    <?= e($user['bio']) ?>
+                    <span data-dc-user-content><?= e($user['bio']) ?></span>
                 </p>
             <?php endif; ?>
             
@@ -572,8 +574,8 @@ document.addEventListener('keydown', (e) => {
                                 </div>
                                 
                                 <div class="mt-2 text-dark">
-                                    <h5 class="font-extrabold text-base mb-1.5"><a href="topic.php?id=<?= e($topic['id']) ?>" class="hover:text-primary transition-colors"><?= e($topic['title']) ?></a></h5>
-                                    <p class="text-sm font-medium leading-relaxed text-slate-600 break-words">
+                                    <h5 class="font-extrabold text-base mb-1.5"><a data-dc-user-content href="topic.php?id=<?= e($topic['id']) ?>" class="hover:text-primary transition-colors"><?= e($topic['title']) ?></a></h5>
+                                    <p data-dc-user-content class="text-sm font-medium leading-relaxed text-slate-600 break-words">
                                         <?= nl2br(e(strlen($topic['description']) > 300 ? mb_substr($topic['description'], 0, 300, 'UTF-8') . '...' : $topic['description'])) ?>
                                     </p>
                                     <?php if(strlen($topic['description']) > 300): ?>

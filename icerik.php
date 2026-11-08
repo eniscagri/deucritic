@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <?php if ($topic['anonymous']): ?>
                                     <span class="text-xs font-bold text-slate-700 italic">AnY</span>
                                 <?php else: ?>
-                                    <span class="text-xs font-bold text-slate-800">@<?= htmlspecialchars($topic['username']) ?></span>
+                                    <span data-dc-user-content class="text-xs font-bold text-slate-800">@<?= htmlspecialchars($topic['username']) ?></span>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -194,12 +194,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                    <div class="mb-5 flex-grow">
                 <h3 class="text-xl font-extrabold text-slate-900 leading-snug tracking-tight mb-2.5 transition-all duration-300 group-hover:bg-clip-text group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-yellow-500 line-clamp-2">
-                    <?= htmlspecialchars($topic['title']) ?>
+                    <span data-dc-user-content><?= htmlspecialchars($topic['title']) ?></span>
                 </h3>
                 
                 <?php if (!empty($topic['description'])): ?>
                     <p class="text-[15px] text-slate-500 font-medium leading-relaxed line-clamp-2 opacity-90 group-hover:opacity-100 transition-opacity duration-300">
-                        <?= htmlspecialchars($topic['description']) ?>
+                        <span data-dc-user-content><?= htmlspecialchars($topic['description']) ?></span>
                     </p>
                 <?php endif; ?>
             </div>

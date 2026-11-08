@@ -1,3 +1,6 @@
+<?php
+require_once __DIR__ . '/includes/i18n.php';
+?>
 <form 
   action="actions/upload_story.php" 
   method="POST" 

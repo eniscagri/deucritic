@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/includes/i18n.php';
+
 require_once 'includes/config.php';
 require_once 'includes/helpers.php';
 
@@ -99,12 +101,12 @@ if($is_logged_in){
         
         <div class="relative z-10 flex flex-col gap-4">
             <h1 class="text-3xl md:text-4xl font-black text-slate-900 leading-tight tracking-tight">
-                <?= htmlspecialchars($topic['title']) ?>
+                <span data-dc-user-content><?= htmlspecialchars($topic['title']) ?></span>
             </h1>
 
             <?php if (!empty($topic['description'])): ?>
                 <p class="text-slate-600 font-medium leading-relaxed text-lg">
-                    <?= nl2br(htmlspecialchars($topic['description'])) ?>
+                    <span data-dc-user-content><?= nl2br(htmlspecialchars($topic['description'])) ?></span>
                 </p>
             <?php endif; ?>
 
@@ -206,7 +208,7 @@ if($is_logged_in){
                         </div>
                     </div>
 
-                    <div class="text-slate-700 text-[16px] font-medium leading-relaxed break-words pl-[3.5rem]">
+                    <div data-dc-user-content class="text-slate-700 text-[16px] font-medium leading-relaxed break-words pl-[3.5rem]">
                         <?= linkify_html($e['content']) ?>
                     </div>
 
