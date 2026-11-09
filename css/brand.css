@@ -18,6 +18,15 @@
 }
 
 html { scroll-behavior: smooth; }
+.dc-site-header {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+body.dc-menu-open { overflow: hidden; }
+.dc-mobile-menu.hidden, .dc-search-panel.hidden { display: none !important; }
+.dc-mobile-menu { padding-top: calc(6rem + env(safe-area-inset-top, 0px)) !important; }
+.dc-mobile-menu > .absolute.top-6.left-6 { top: calc(1.5rem + env(safe-area-inset-top, 0px)); }
 ::selection { color: var(--dc-ink); background: var(--dc-sun); }
 :focus-visible { outline: 3px solid var(--dc-coral) !important; outline-offset: 3px; }
 body {

@@ -38,6 +38,11 @@
             <p class="text-gray-400 text-xs font-medium">
                 &copy; 2026 Deucritic Sözlük.
             </p>
+            <nav class="flex items-center gap-3 text-xs font-bold" aria-label="Dil seçimi">
+                <a href="<?= htmlspecialchars(dc_lang_url('tr'), ENT_QUOTES, 'UTF-8') ?>" lang="tr" hreflang="tr" aria-current="<?= dc_lang()==='tr' ? 'page' : 'false' ?>" class="<?= dc_lang()==='tr' ? 'text-[#1d352f]' : 'text-slate-500' ?>">Türkçe</a>
+                <span aria-hidden="true" class="text-slate-300">|</span>
+                <a href="<?= htmlspecialchars(dc_lang_url('en'), ENT_QUOTES, 'UTF-8') ?>" lang="en" hreflang="en" aria-current="<?= dc_lang()==='en' ? 'page' : 'false' ?>" class="<?= dc_lang()==='en' ? 'text-[#1d352f]' : 'text-slate-500' ?>">English</a>
+            </nav>
              <div class="flex items-center gap-2 group">
         <span class="text-xs sm:text-sm text-slate-400 group-hover:text-slate-600 transition font-medium">
           an eniscagri production

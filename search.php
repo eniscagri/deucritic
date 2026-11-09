@@ -6,6 +6,7 @@ require_once __DIR__ . '/includes/config.php';
 $q = trim(substr((string) ($_GET['q'] ?? ''), 0, 100));
 $results = [];
 $topicResults = [];
+$entryResults = [];
 
 if ($q !== '') {
     $searchTerm = "%{$q}%";
@@ -20,6 +21,11 @@ if ($q !== '') {
     $stmt->bindValue(':description_q', $searchTerm, PDO::PARAM_STR);
     $stmt->execute();
     $topicResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmt = $pdo->prepare("SELECT e.id, e.topic_id, e.content, e.created_at, t.title AS topic_title FROM entries e JOIN topics t ON t.id = e.topic_id WHERE e.content LIKE :content_q ORDER BY e.created_at DESC LIMIT 30");
+    $stmt->bindValue(':content_q', $searchTerm, PDO::PARAM_STR);
+    $stmt->execute();
+    $entryResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function getProfilePhoto($photo) {
@@ -43,7 +49,7 @@ function getProfilePhoto($photo) {
         <section class="dc-search-intro">
             <p class="dc-label">Kampüsün gündemi</p>
             <h1 class="text-2xl font-bold mb-2">Aradığını bul</h1>
-            <p>Konu başlıklarında ve öğrenci profillerinde ara.</p>
+            <p>Onep içeriklerinde, konu başlıklarında ve öğrenci profillerinde ara.</p>
         </section>
         <form method="GET" class="dc-search-form mb-6 flex gap-2" role="search">
             <label class="sr-only" for="people-search">Kullanıcı ara</label>
@@ -53,9 +59,20 @@ function getProfilePhoto($photo) {
 
         <?php if ($q === ''): ?>
             <div class="dc-search-empty p-4 bg-white rounded-xl shadow text-gray-600"><span class="dc-search-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span><strong>Keşfe hazır mısın?</strong><p>Bir kullanıcı adı ya da ilgi alanı yazarak başla.</p></div>
-        <?php elseif (empty($results) && empty($topicResults)): ?>
+        <?php elseif (empty($results) && empty($topicResults) && empty($entryResults)): ?>
             <div class="dc-search-empty p-4 bg-white rounded-xl shadow text-gray-600"><span class="dc-search-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span><strong>Bu aramayla eşleşme yok</strong><p>Yazımı kontrol et veya daha kısa bir kelime dene.</p></div>
         <?php else: ?>
+          <?php if (!empty($entryResults)): ?>
+            <p class="dc-search-count">Onep içerikleri · <?= count($entryResults) ?> sonuç</p>
+            <ul class="space-y-3 mb-8">
+              <?php foreach ($entryResults as $entry): ?>
+                <li><a href="/topic.php?id=<?= (int) $entry['topic_id'] ?>#comments" class="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                  <p data-dc-user-content class="text-gray-800 line-clamp-3"><?= nl2br(htmlspecialchars($entry['content'], ENT_QUOTES, 'UTF-8')) ?></p>
+                  <span class="mt-2 block text-xs font-semibold text-gray-400">Konu: <?= htmlspecialchars($entry['topic_title'], ENT_QUOTES, 'UTF-8') ?></span>
+                </a></li>
+              <?php endforeach; ?>
+            </ul>
+          <?php endif; ?>
           <?php if (!empty($topicResults)): ?>
             <p class="dc-search-count">Konu başlıkları · <?= count($topicResults) ?> sonuç</p>
             <ul class="space-y-3 mb-8">

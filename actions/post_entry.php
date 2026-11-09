@@ -1,26 +1,31 @@
 
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
 error_reporting(E_ALL);
 
-require_once '../includes/config.php';
+require_once __DIR__ . '/../includes/config.php';
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
 
-if(!is_logged_in()) {
-    echo json_encode(['success'=>false,'error'=>'Giriş yapmalısın']); 
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'error' => 'Geçersiz istek.']);
+    exit;
+}
+
+if (empty($_SESSION['user_id'])) {
+    http_response_code(401);
+    echo json_encode(['success'=>false,'error'=>'Oturumun sona ermiş. Yeniden giriş yap.']);
     exit;
 }
 
 $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
 if(!$csrf || !hash_equals($_SESSION['csrf_token'],$csrf)){
+    http_response_code(403);
     echo json_encode(['success'=>false,'error'=>'CSRF doğrulaması başarısız']); 
     exit;
 }
-function is_logged_in(){
-    return !empty($_SESSION['user_id']);
-}
-
 $topic_id = intval($_POST['topic_id'] ?? 0);
 $content = trim($_POST['content'] ?? '');
 $anonymous = isset($_POST['anonymous']) && $_POST['anonymous']=='1' ? 1 : 0;
@@ -76,23 +81,21 @@ try {
     $stmt->execute([$topic_id, $_SESSION['user_id'], $content, $link, $imagePath, $anonymous]);
     $entry_id = $pdo->lastInsertId();
 
-    $username = $_SESSION['username'] ?? 'U';
-    $displayName = $anonymous ? 'Anonim' : '@'.htmlspecialchars($username);
-    $firstChar = strtoupper(mb_substr($username,0,1));
+    $displayName = $anonymous ? 'Anonim' : '@'.htmlspecialchars((string) $username, ENT_QUOTES, 'UTF-8');
+    $firstChar = htmlspecialchars(mb_strtoupper(mb_substr((string) $username,0,1, 'UTF-8'), 'UTF-8'), ENT_QUOTES, 'UTF-8');
 
     $rendered = '<div class="p-4 rounded-xl bg-gray-50 border mb-3 animate-fade" data-id="'.$entry_id.'">';
     $rendered .= '<div class="flex gap-2 items-center mb-2">';
     $rendered .= '<div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">'.$firstChar.'</div>';
     $rendered .= '<span class="text-xs text-gray-500">'.$displayName.'</span>';
     $rendered .= '<span class="text-xs text-gray-400 ml-auto">'.date('d.m.Y H:i').'</span></div>';
-    $rendered .= '<div class="text-sm leading-relaxed">'.nl2br(htmlspecialchars($content)).'</div>';
-    if($imagePath) $rendered .= '<div class="mt-2"><img src="'.htmlspecialchars($imagePath).'" class="max-w-full rounded"></div>';
+    $rendered .= '<div class="text-sm leading-relaxed">'.nl2br(htmlspecialchars($content, ENT_QUOTES, 'UTF-8')).'</div>';
+    if($imagePath) $rendered .= '<div class="mt-2"><img src="'.htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8').'" class="max-w-full rounded"></div>';
     $rendered .= '</div>';
 
     echo json_encode(['success'=>true, 'entry_id'=>$entry_id, 'html'=>$rendered]);
 
-} catch(Exception $ex){
+} catch(Throwable $ex){
     error_log($ex->getMessage());
     echo json_encode(['success'=>false,'error'=>'Veritabanı hatası']);
 }
-require_once '../includes/helpers.php';

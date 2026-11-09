@@ -631,8 +631,12 @@ $current_page = basename($_SERVER['PHP_SELF']);
     function load() {
         if(!<?= $active ?: 0 ?>) return;
         
-        fetch(`get_messages.php?user=<?= $active ?>&last_id=${lastId}`)
-        .then(r => r.json())
+        fetch(`/get_messages.php?user=<?= $active ?>&last_id=${lastId}`, { credentials: 'same-origin', cache: 'no-store' })
+        .then(r => {
+            if (r.status === 401) { window.location.href = '/login.php'; throw new Error('Oturum sona erdi.'); }
+            if (!r.ok) throw new Error('Mesajlar yüklenemedi.');
+            return r.json();
+        })
         .then(d => {
             if(d.length > 0) {
                 const isReadingHistory = isUserReadingOldMessages();
@@ -808,11 +812,15 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
             chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
 
-            fetch("send_message.php", { method: "POST", body: formData })
-            .then(() => load())
+            fetch("/send_message.php", { method: "POST", credentials: 'same-origin', body: formData })
+            .then(async response => {
+                const result = await response.json();
+                if (!response.ok || result.status !== 'success') throw new Error(result.message || 'Mesaj gönderilemedi.');
+                load();
+            })
             .catch(() => {
                 msgInput.value = val;
-                alert("İnternet bağlantınızı kontrol edip tekrar deneyin.");
+                alert("Mesaj gönderilemedi. Bağlantıyı kontrol edip tekrar deneyin.");
             }).finally(() => {
                 submitBtn.disabled = false;
                 sendIcon.classList.remove('hidden'); loadingIcon.classList.add('hidden');
@@ -829,6 +837,13 @@ $current_page = basename($_SERVER['PHP_SELF']);
         const ringtone = document.getElementById('ringtoneAudio');
         
         let peer = new Peer(myPeerId);
+        let peerReady = false;
+        peer.on('open', () => { peerReady = true; });
+        peer.on('error', error => {
+            console.error('PeerJS connection error:', error);
+            const status = document.getElementById('callStatusText');
+            if (status) status.textContent = 'Arama servisine bağlanılamadı. Sayfayı yenileyip tekrar dene.';
+        });
         let currentCall, localStream, pendingIncomingCall;
         let callTimerInterval = null;
         let callSeconds = 0;
@@ -901,7 +916,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 
                 currentCall.on('stream', function(remoteStream) {
                     const remoteAudio = document.getElementById('remoteAudio');
-                    remoteAudio.srcObject = remoteStream; remoteAudio.play();
+                    remoteAudio.srcObject = remoteStream;
+                    remoteAudio.play().catch(error => console.warn('Ses oynatılamadı:', error));
                 });
                 
                 currentCall.on('close', function() { closeCallUI(); });
@@ -921,6 +937,14 @@ $current_page = basename($_SERVER['PHP_SELF']);
         }
 
         window.startRealCall = function(type) {
+            if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+                alert('Sesli arama için HTTPS bağlantısı ve mikrofon desteği gerekir.');
+                return;
+            }
+            if (!peerReady || peer.destroyed) {
+                alert('Arama servisine henüz bağlanılamadı. Birkaç saniye sonra tekrar dene.');
+                return;
+            }
             document.getElementById('callOverlay').classList.remove('hidden'); document.getElementById('callOverlay').classList.add('flex');
             document.getElementById('callStatusText').textContent = 'Aranıyor...';
             document.getElementById('callStatusText').classList.add('animate-pulse');
@@ -940,7 +964,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     // Zamanlayıcıyı Başlat
                     startCallTimer();
                     const remoteAudio = document.getElementById('remoteAudio'); 
-                    remoteAudio.srcObject = remoteStream; remoteAudio.play();
+                    remoteAudio.srcObject = remoteStream;
+                    remoteAudio.play().catch(error => console.warn('Ses oynatılamadı:', error));
                 });
                 
                 call.on('close', function() { closeCallUI(); });

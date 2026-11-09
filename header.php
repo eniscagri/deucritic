@@ -214,11 +214,10 @@ if($user_id){
 ?>
 
 <header 
-    x-data="{ mobileOpen: false, profileOpen: false, searchOpen: false, scrolled: false }"
+    x-data="{ profileOpen: false, scrolled: false }"
     @scroll.window="scrolled = window.pageYOffset > 10"
-    x-init="$watch('mobileOpen', value => document.body.style.overflow = value ? 'hidden' : '')"
     :class="scrolled ? 'bg-white/85 backdrop-blur-xl border-b border-slate-200/50 shadow-sm py-2' : 'bg-transparent border-b border-transparent py-4'"
-    class="sticky top-0 z-[1000] w-full transition-all duration-300 font-sans"
+    class="dc-site-header sticky top-0 z-[1000] w-full transition-all duration-300 font-sans"
 >
 
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
@@ -226,7 +225,7 @@ if($user_id){
     <div class="max-w-6xl mx-auto px-4 md:px-6 flex justify-between items-center">
         
         <a href="index.php" class="flex items-center gap-3 group select-none">
-            <img src="/gorsel/deucritic-mark.svg" alt="Deucritic" class="w-10 h-10 md:w-11 md:h-11 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110 drop-shadow-sm">
+            <img src="/gorsel/deucritic-mark.svg" alt="Deucritic" class="w-12 h-12 md:w-11 md:h-11 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110 drop-shadow-sm">
             <div class="flex flex-col justify-center">
                 <span class="text-xl md:text-2xl dc-wordmark font-black text-[#1d352f] tracking-tight leading-none">Deucritic</span>
                 <span class="text-[9px] font-black text-[#b84834] tracking-[0.25em] uppercase leading-none mt-0.5">Sözlük</span>
@@ -243,14 +242,14 @@ if($user_id){
 
         <div class="flex items-center gap-2 sm:gap-3">
 
-            <div class="flex items-center gap-0.5 rounded-xl border border-slate-200 bg-white p-1 text-[10px] font-black tracking-wider" aria-label="Language">
+            <div class="hidden sm:flex items-center gap-0.5 rounded-xl border border-slate-200 bg-white p-1 text-[10px] font-black tracking-wider" aria-label="Language">
                 <a href="<?= htmlspecialchars(dc_lang_url('tr'), ENT_QUOTES, 'UTF-8') ?>" lang="tr" class="px-2 py-1 rounded-lg <?= dc_lang()==='tr' ? 'bg-[#1d352f] text-white' : 'text-slate-500 hover:text-slate-800' ?>">TR</a>
                 <a href="<?= htmlspecialchars(dc_lang_url('en'), ENT_QUOTES, 'UTF-8') ?>" lang="en" class="px-2 py-1 rounded-lg <?= dc_lang()==='en' ? 'bg-[#1d352f] text-white' : 'text-slate-500 hover:text-slate-800' ?>">EN</a>
             </div>
             
-            <button type="button" aria-label="Aramayı aç" :aria-expanded="searchOpen.toString()" @click="searchOpen = !searchOpen" 
+            <button id="search-toggle" type="button" aria-controls="search-panel" aria-expanded="false" aria-label="Aramayı aç"
                 class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 border border-slate-200 hover:bg-white hover:text-[#b84834] hover:shadow-sm transition-all focus:outline-none">
-                <i class="fa-solid" :class="searchOpen ? 'fa-xmark' : 'fa-magnifying-glass'"></i>
+                <i id="search-toggle-icon" class="fa-solid fa-magnifying-glass"></i>
             </button>
 
             <?php if($u): ?>
@@ -331,32 +330,24 @@ if($user_id){
                 </a>
             <?php endif; ?>
 
-            <button @click="mobileOpen = !mobileOpen" class="lg:hidden w-10 h-10 flex items-center justify-center bg-[#1d352f] text-white rounded-xl active:scale-95 transition-transform">
-                <i class="fa-solid text-lg" :class="mobileOpen ? 'fa-xmark' : 'fa-bars-staggered'"></i>
+            <button id="menu-toggle" type="button" aria-controls="menu" aria-label="Menüyü aç" aria-expanded="false" class="lg:hidden w-10 h-10 flex items-center justify-center bg-[#1d352f] text-white rounded-xl active:scale-95 transition-transform">
+                <i id="menu-toggle-icon" class="fa-solid fa-bars-staggered text-lg"></i>
             </button>
 
         </div>
     </div>
 
-    <div x-show="searchOpen" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="-translate-y-full opacity-0"
-         x-transition:enter-end="translate-y-0 opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="translate-y-0 opacity-100"
-         x-transition:leave-end="-translate-y-full opacity-0"
-         @keydown.window.escape="searchOpen = false"
-         class="absolute top-full left-0 w-full bg-white/95 backdrop-blur-2xl border-b border-slate-200 shadow-[0_20px_40px_rgba(0,0,0,0.06)] p-6 md:p-10 z-[999]" x-cloak>
+    <div id="search-panel" class="dc-search-panel hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-2xl border-b border-slate-200 shadow-[0_20px_40px_rgba(0,0,0,0.06)] p-6 md:p-10 z-[999]" aria-label="Arama">
         
         <div class="max-w-3xl mx-auto">
-            <form action="search.php" method="GET" class="relative group">
+            <form action="/search.php" method="GET" class="relative group" role="search">
                 <div class="absolute left-6 top-1/2 -translate-y-1/2 flex items-center text-slate-400 group-focus-within:text-[#b84834] transition-colors pointer-events-none">
                     <i class="fa-solid fa-magnifying-glass text-xl"></i>
                 </div>
                 
-                <input name="q" type="search" maxlength="100" autocomplete="off" placeholder="Başlık veya kullanıcı ara" 
+                <input name="q" type="search" maxlength="100" autocomplete="off" placeholder="Onep, başlık veya kullanıcı ara"
                        class="w-full pl-16 pr-28 py-5 rounded-[2rem] bg-slate-50 border-2 border-slate-100 focus:border-[#b84834]/30 focus:bg-white focus:shadow-xl focus:shadow-[#b84834]/5 outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400 text-lg"
-                       x-init="$watch('searchOpen', value => value && $nextTick(() => $el.focus()))">
+                       >
 
                 <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-3 bg-[#1d352f] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#b84834] transition-all shadow-md active:scale-95">
                     Ara
@@ -372,17 +363,10 @@ if($user_id){
         </div>
     </div>
 
-    <div x-show="mobileOpen" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="translate-x-full opacity-0"
-         x-transition:enter-end="translate-x-0 opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="translate-x-0 opacity-100"
-         x-transition:leave-end="translate-x-full opacity-0"
-         class="fixed inset-0 bg-white/95 backdrop-blur-2xl z-[1001] lg:hidden flex flex-col p-6 pt-24 overflow-y-auto" x-cloak>
+    <div id="menu" class="dc-mobile-menu hidden fixed inset-0 bg-white/95 backdrop-blur-2xl z-[1001] lg:hidden flex flex-col p-6 pt-24 overflow-y-auto" aria-label="Mobil menü">
         
         <div class="absolute top-6 left-6 flex items-center gap-4">
-            <button @click="mobileOpen = false" class="w-12 h-12 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 active:scale-90 transition-transform">
+            <button type="button" data-menu-close class="w-12 h-12 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 active:scale-90 transition-transform">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
             <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Kapat</span>
@@ -418,6 +402,7 @@ if($user_id){
         </div>
     </div>
 </header>
+<script src="/js/main.js" defer></script>
 
 <style>
 

@@ -196,10 +196,15 @@ document.querySelectorAll('.story-trigger').forEach(el => {
     const uid = el.dataset.user;
     
     try {
-        const res = await fetch('actions/fetch_stories.php?user_id='+encodeURIComponent(uid), {headers: {'Accept': 'application/json'}});
-        if (!res.ok) throw new Error('Hikayeler yüklenemedi.');
+        const res = await fetch('/actions/fetch_stories.php?user_id='+encodeURIComponent(uid), {
+          credentials: 'same-origin',
+          headers: {'Accept': 'application/json'}
+        });
+        if (res.status === 401) throw new Error('Hikâyeleri görmek için giriş yapmalısın.');
+        if (res.status === 403) throw new Error('Bu hikâyeyi görüntüleme iznin yok.');
+        if (!res.ok) throw new Error('Hikâyeler yüklenemedi. Tekrar dene.');
         const data = await res.json();
-        if(!data || !data.stories || !data.stories.length) return;
+        if(!data || !Array.isArray(data.stories) || !data.stories.length) throw new Error('Görüntülenecek aktif hikâye yok.');
         
         activeStories = data.stories;
         activeIndex = 0;
@@ -209,7 +214,17 @@ document.querySelectorAll('.story-trigger').forEach(el => {
         document.body.style.overflow = 'hidden'; 
         renderStory(activeIndex);
     } catch(err) {
-        console.error("Hikayeler yüklenemedi:", err);
+        let notice = document.getElementById('story-load-notice');
+        if (!notice) {
+          notice = document.createElement('div');
+          notice.id = 'story-load-notice';
+          notice.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 z-[10010] max-w-[90vw] rounded-xl bg-[#1d352f] px-4 py-3 text-sm font-semibold text-white shadow-xl';
+          notice.setAttribute('role', 'status');
+          document.body.appendChild(notice);
+        }
+        notice.textContent = err.message || 'Hikâyeler yüklenemedi. Tekrar dene.';
+        clearTimeout(notice.dismissTimer);
+        notice.dismissTimer = setTimeout(() => notice.remove(), 3500);
     }
   });
 });

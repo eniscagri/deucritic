@@ -385,7 +385,7 @@ if($is_logged_in){
                 postBtn.querySelector('span').textContent = 'Gönderiliyor...';
 
                 try {
-                    const res = await fetch('actions/post_entry.php', { method: 'POST', headers: { 'X-CSRF-Token': window.CSRF_TOKEN }, body: form });
+                    const res = await fetch('/actions/post_entry.php', { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': window.CSRF_TOKEN }, body: form });
                     const data = await res.json();
                     if(!data.success) throw new Error(data.error || 'Bilinmeyen bir hata oluştu.');
                     location.reload(); 
@@ -412,8 +412,9 @@ if($is_logged_in){
                 setTimeout(() => icon.classList.remove('animate-heart-pop'), 300);
 
                 try {
-                    const response = await fetch('ajax_like_entry.php', {
+                    const response = await fetch('/ajax_like_entry.php', {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ entry_id: entryId })
                     });
