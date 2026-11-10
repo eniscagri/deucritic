@@ -1,8 +1,6 @@
 <?php
 /** Lightweight UI language support for the existing PHP site. User posts and comments are not translated. */
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/session.php';
 
 $requestedLanguage = $_GET['lang'] ?? null;
 if (in_array($requestedLanguage, ['tr', 'en'], true)) {

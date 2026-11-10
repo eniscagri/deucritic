@@ -385,8 +385,8 @@ if($is_logged_in){
                 postBtn.querySelector('span').textContent = 'Gönderiliyor...';
 
                 try {
-                    const res = await fetch('actions/post_entry.php', { method: 'POST', headers: { 'X-CSRF-Token': window.CSRF_TOKEN }, body: form });
-                    if (res.status === 401 || res.status === 403) {
+                    const res = await fetch('actions/post_entry.php', { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': window.CSRF_TOKEN }, body: form });
+                    if (res.status === 401) {
                         window.location.href = 'login.php';
                         return;
                     }

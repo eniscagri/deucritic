@@ -1,14 +1,6 @@
 
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-require_once '../includes/config.php';
+require_once __DIR__ . '/../includes/config.php';
 header('Content-Type: application/json; charset=utf-8');
 
 function is_logged_in() {
@@ -16,12 +8,14 @@ function is_logged_in() {
 }
 
 if (!is_logged_in()) {
+    http_response_code(401);
     echo json_encode(['success' => false, 'error' => 'Giriş yapmalısın']);
     exit;
 }
 
 $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
 if (!$csrf || !hash_equals($_SESSION['csrf_token'] ?? '', $csrf)) {
+    http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'CSRF doğrulaması başarısız']);
     exit;
 }
@@ -31,7 +25,7 @@ $content = trim($_POST['content'] ?? '');
 $anonymous = isset($_POST['anonymous']) && $_POST['anonymous']=='1' ? 1 : 0;
 
 if($topic_id <= 0 || mb_strlen($content) < 5){
-    echo json_encode(['success'=>false,'error'=>'Eksik veya kısa içerik']); 
+    echo json_encode(['success'=>false,'error'=>'Eksik veya kısa içerik']);
     exit;
 }
 
@@ -45,12 +39,12 @@ if (!empty($_FILES['image']['name'])) {
 
     $allowedMimes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
     if (!array_key_exists($mime, $allowedMimes)) {
-        echo json_encode(['success' => false, 'error' => 'Sadece JPEG, PNG veya WEBP formatları kabul edilir.']); 
+        echo json_encode(['success' => false, 'error' => 'Sadece JPEG, PNG veya WEBP formatları kabul edilir.']);
         exit;
     }
 
     if ($f['size'] > 2 * 1024 * 1024) { // 2MB sınırı
-        echo json_encode(['success' => false, 'error' => 'Dosya boyutu en fazla 2MB olabilir.']); 
+        echo json_encode(['success' => false, 'error' => 'Dosya boyutu en fazla 2MB olabilir.']);
         exit;
     }
 
@@ -61,7 +55,7 @@ if (!empty($_FILES['image']['name'])) {
     $dest = $destDir . $name;
 
     if (!move_uploaded_file($f['tmp_name'], $dest)) {
-        echo json_encode(['success' => false, 'error' => 'Dosya yüklenirken bir hata oluştu.']); 
+        echo json_encode(['success' => false, 'error' => 'Dosya yüklenirken bir hata oluştu.']);
         exit;
     }
 

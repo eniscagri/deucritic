@@ -216,20 +216,9 @@ if($user_id){
 <header
     x-data="{
         profileOpen: false,
-        searchOpen: false,
-        scrolled: false,
-        toggleSearch() {
-            this.searchOpen = !this.searchOpen;
-            this.$nextTick(() => {
-                const input = document.getElementById('header-search-input');
-                if (this.searchOpen && input) {
-                    input.focus();
-                }
-            });
-        }
+        scrolled: false
     }"
     @scroll.window="scrolled = window.pageYOffset > 10"
-    x-init="$watch('searchOpen', value => { if (!value) { const input = document.getElementById('header-search-input'); if (input) input.blur(); } });"
     :class="scrolled ? 'bg-white/85 backdrop-blur-xl border-b border-slate-200/50 shadow-sm py-2' : 'bg-transparent border-b border-transparent py-4'"
     class="dc-site-header sticky top-0 z-[1000] w-full transition-all duration-300 font-sans"
 >
@@ -256,9 +245,9 @@ if($user_id){
 
         <div class="flex items-center gap-2 sm:gap-3">
 
-            <button type="button" aria-label="Aramayı aç" :aria-label="searchOpen ? 'Aramayı kapat' : 'Aramayı aç'" :aria-expanded="searchOpen.toString()" @click="toggleSearch()"
+            <button id="header-search-button" type="button" aria-label="Aramayı aç" aria-controls="header-search-panel" aria-expanded="false"
                 class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 border border-slate-200 hover:bg-white hover:text-[#b84834] hover:shadow-sm transition-all focus:outline-none">
-                <i class="fa-solid" :class="searchOpen ? 'fa-xmark' : 'fa-magnifying-glass'"></i>
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
             </button>
 
             <?php if($u): ?>
@@ -346,15 +335,7 @@ if($user_id){
         </div>
     </div>
 
-    <div id="header-search-panel" x-show="searchOpen"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="-translate-y-full opacity-0"
-         x-transition:enter-end="translate-y-0 opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="translate-y-0 opacity-100"
-         x-transition:leave-end="-translate-y-full opacity-0"
-         @keydown.window.escape="searchOpen = false"
-         class="absolute top-full left-0 w-full bg-white/95 backdrop-blur-2xl border-b border-slate-200 shadow-[0_20px_40px_rgba(0,0,0,0.06)] p-6 md:p-10 z-[999]" x-cloak>
+    <div id="header-search-panel" class="dc-search-panel absolute top-full left-0 w-full bg-white/95 backdrop-blur-2xl border-b border-slate-200 shadow-[0_20px_40px_rgba(0,0,0,0.06)] p-6 md:p-10 z-[999]" aria-hidden="true">
 
         <div class="max-w-3xl mx-auto">
             <form action="search.php" method="GET" class="relative group">
@@ -364,7 +345,7 @@ if($user_id){
 
                 <input id="header-search-input" name="q" type="search" maxlength="100" autocomplete="off" placeholder="Başlık veya kullanıcı ara"
                        class="w-full pl-16 pr-28 py-5 rounded-[2rem] bg-slate-50 border-2 border-slate-100 focus:border-[#b84834]/30 focus:bg-white focus:shadow-xl focus:shadow-[#b84834]/5 outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400 text-lg"
-                       x-init="$watch('searchOpen', value => value && $nextTick(() => $el.focus()))" />
+                       />
 
                 <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-3 bg-[#1d352f] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#b84834] transition-all shadow-md active:scale-95">
                     Ara
@@ -424,13 +405,16 @@ if($user_id){
 (() => {
     const menuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('header-mobile-menu');
+    const searchButton = document.getElementById('header-search-button');
+    const searchPanel = document.getElementById('header-search-panel');
 
-    if (!menuButton || !mobileMenu) return;
-
-    const menuIcon = menuButton.querySelector('i');
-    const closeButton = mobileMenu.querySelector('[data-mobile-menu-close]');
+    const menuIcon = menuButton ? menuButton.querySelector('i') : null;
+    const closeButton = mobileMenu ? mobileMenu.querySelector('[data-mobile-menu-close]') : null;
+    const searchIcon = searchButton ? searchButton.querySelector('i') : null;
+    const searchInput = document.getElementById('header-search-input');
 
     const setMenuOpen = (open) => {
+        if (!menuButton || !mobileMenu) return;
         mobileMenu.classList.toggle('is-open', open);
         mobileMenu.setAttribute('aria-hidden', String(!open));
         menuButton.setAttribute('aria-expanded', String(open));
@@ -443,16 +427,44 @@ if($user_id){
         }
     };
 
-    menuButton.addEventListener('click', () => {
-        setMenuOpen(menuButton.getAttribute('aria-expanded') !== 'true');
-    });
-    closeButton?.addEventListener('click', () => setMenuOpen(false));
-    mobileMenu.querySelectorAll('a').forEach((link) => {
-        link.addEventListener('click', () => setMenuOpen(false));
-    });
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && menuButton.getAttribute('aria-expanded') === 'true') {
+    const setSearchOpen = (open) => {
+        if (!searchButton || !searchPanel) return;
+        searchPanel.classList.toggle('is-open', open);
+        searchPanel.setAttribute('aria-hidden', String(!open));
+        searchButton.setAttribute('aria-expanded', String(open));
+        searchButton.setAttribute('aria-label', open ? 'Aramayı kapat' : 'Aramayı aç');
+        if (searchIcon) {
+            searchIcon.classList.toggle('fa-magnifying-glass', !open);
+            searchIcon.classList.toggle('fa-xmark', open);
+        }
+        if (open && searchInput) searchInput.focus();
+        if (!open && searchInput) searchInput.blur();
+    };
+
+    if (menuButton) {
+        menuButton.addEventListener('click', () => {
+            const open = menuButton.getAttribute('aria-expanded') !== 'true';
+            setSearchOpen(false);
+            setMenuOpen(open);
+        });
+    }
+    if (closeButton) closeButton.addEventListener('click', () => setMenuOpen(false));
+    if (mobileMenu) {
+        mobileMenu.querySelectorAll('a').forEach((link) => {
+            link.addEventListener('click', () => setMenuOpen(false));
+        });
+    }
+    if (searchButton) {
+        searchButton.addEventListener('click', () => {
+            const open = searchButton.getAttribute('aria-expanded') !== 'true';
             setMenuOpen(false);
+            setSearchOpen(open);
+        });
+    }
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            setMenuOpen(false);
+            setSearchOpen(false);
         }
     });
 })();
@@ -524,6 +536,9 @@ if($user_id){
 .mobile-nav-link:hover { color: #1d352f; }
 
 [x-cloak] { display: none !important; }
+
+.dc-search-panel { display: none; }
+.dc-search-panel.is-open { display: block; }
 
 .dc-mobile-menu {
     display: none;

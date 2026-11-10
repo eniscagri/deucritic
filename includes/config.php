@@ -7,19 +7,7 @@ ini_set('log_errors', '1');
 $isLocalEnvironment = strtolower((string) (getenv('APP_ENV') ?: 'production')) === 'local';
 ini_set('display_errors', $isLocalEnvironment ? '1' : '0');
 
-if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.use_strict_mode', '1');
-    ini_set('session.use_only_cookies', '1');
-    $isHttps = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== '' && strtolower((string) $_SERVER['HTTPS']) !== 'off';
-    session_set_cookie_params([
-        'lifetime' => 0,
-        'path' => '/',
-        'secure' => $isHttps,
-        'httponly' => true,
-        'samesite' => 'Lax',
-    ]);
-    session_start();
-}
+require_once __DIR__ . '/session.php';
 
 // Keep database secrets outside the document root and out of Git.
 $privateConfigPath = getenv('DEUCRITIC_CONFIG_FILE') ?: '';
@@ -85,7 +73,7 @@ if ($isLoggedIn) {
     $stmt = $pdo->prepare("SELECT id, username, email, school, grade_level, streak_count FROM users WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
     $user = $stmt->fetch();
-    
+
     if ($user) {
         $userId = $user['id'];
         $username = $user['username'];
