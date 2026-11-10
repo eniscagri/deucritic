@@ -1,5 +1,9 @@
 
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -7,18 +11,19 @@ error_reporting(E_ALL);
 require_once '../includes/config.php';
 header('Content-Type: application/json; charset=utf-8');
 
-if(!is_logged_in()) {
-    echo json_encode(['success'=>false,'error'=>'Giriş yapmalısın']); 
+function is_logged_in() {
+    return !empty($_SESSION['user_id']);
+}
+
+if (!is_logged_in()) {
+    echo json_encode(['success' => false, 'error' => 'Giriş yapmalısın']);
     exit;
 }
 
 $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-if(!$csrf || !hash_equals($_SESSION['csrf_token'],$csrf)){
-    echo json_encode(['success'=>false,'error'=>'CSRF doğrulaması başarısız']); 
+if (!$csrf || !hash_equals($_SESSION['csrf_token'] ?? '', $csrf)) {
+    echo json_encode(['success' => false, 'error' => 'CSRF doğrulaması başarısız']);
     exit;
-}
-function is_logged_in(){
-    return !empty($_SESSION['user_id']);
 }
 
 $topic_id = intval($_POST['topic_id'] ?? 0);

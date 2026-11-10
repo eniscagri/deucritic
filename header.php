@@ -1,6 +1,6 @@
 
 <style>
-  
+
     #pwa-install-banner {
         visibility: hidden;
         opacity: 0;
@@ -40,36 +40,36 @@
 
     .pwa-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
     .pwa-text-group { display: flex; align-items: center; gap: 16px; flex: 1; }
-    
+
     .pwa-logo-wrapper { position: relative; flex-shrink: 0; }
-    .pwa-logo { 
-        width: 60px; height: 60px; border-radius: 16px; 
+    .pwa-logo {
+        width: 60px; height: 60px; border-radius: 16px;
         border: 2px solid rgba(68, 181, 213, 0.4); /* Proje ana rengine uyarlandı */
-        box-shadow: 0 8px 20px rgba(0,0,0,0.3); position: relative; z-index: 2; 
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3); position: relative; z-index: 2;
     }
-    .logo-glow { 
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+    .logo-glow {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         width: 50px; height: 50px; background: #b84834; filter: blur(25px); opacity: 0.5; z-index: 1;
     }
 
     .pwa-info h4 { margin: 0; font-size: 18px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; }
-    .pwa-badge { 
+    .pwa-badge {
         background: linear-gradient(90deg, #b84834, #d8785d); color: #1d352f;
-        font-size: 10px; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; 
+        font-size: 10px; padding: 2px 8px; border-radius: 6px; text-transform: uppercase;
         font-weight: 900; margin-left: 8px; vertical-align: middle;
     }
     .pwa-info p { margin: 4px 0 0 0; font-size: 14px; color: #94a3b8; line-height: 1.5; font-weight: 500; }
 
     .pwa-actions { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 24px; }
-    
-    #btn-pwa-install { 
+
+    #btn-pwa-install {
         background: #ffffff; color: #1d352f; border: none; padding: 16px 28px;
-        border-radius: 18px; font-weight: 800; cursor: pointer; font-size: 15px; 
-        flex: 1; box-shadow: 0 10px 25px rgba(255,255,255,0.15); 
+        border-radius: 18px; font-weight: 800; cursor: pointer; font-size: 15px;
+        flex: 1; box-shadow: 0 10px 25px rgba(255,255,255,0.15);
         transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 10px;
         position: relative; overflow: hidden;
     }
-    
+
     #btn-pwa-install::after {
         content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
         background: linear-gradient(45deg, transparent, rgba(255,255,255,0.6), transparent);
@@ -78,20 +78,20 @@
 
     @keyframes shine { 0% { left: -100%; } 100% { left: 100%; } }
 
-    #btn-pwa-close { 
-        background: rgba(255,255,255,0.08); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); 
-        width: 56px; height: 56px; border-radius: 18px; font-size: 22px; 
-        display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; 
+    #btn-pwa-close {
+        background: rgba(255,255,255,0.08); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1);
+        width: 56px; height: 56px; border-radius: 18px; font-size: 22px;
+        display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;
     }
 
     /* iOS Görsel Rehber */
-    .ios-guide { 
-        background: rgba(255, 255, 255, 0.05); padding: 18px; border-radius: 22px; 
+    .ios-guide {
+        background: rgba(255, 255, 255, 0.05); padding: 18px; border-radius: 22px;
         border: 1px solid rgba(255, 255, 255, 0.08); margin-top: 20px;
     }
     .ios-guide-item { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
     .ios-guide-item:last-child { margin-bottom: 0; }
-    .ios-guide-icon { 
+    .ios-guide-icon {
         width: 32px; height: 32px; background: rgba(184, 72, 52, .16);
         border-radius: 10px; display: flex; align-items: center; justify-content: center;
         color: #b84834; font-weight: 800; font-size: 14px; flex-shrink: 0;
@@ -161,7 +161,7 @@
     if (isIos && !isInStandaloneMode) {
         actionButtons.style.display = 'none'; // Standart butonları gizle
         iosGuide.style.display = 'block';     // Rehberi göster
-        
+
         // iOS'ta sağ üst köşeye şık bir kapatma ikonu ekle
         const iosClose = document.createElement('button');
         iosClose.innerHTML = '<i class="fa-solid fa-xmark"></i>';
@@ -205,26 +205,39 @@ if($user_id){
 
     if($u){
         $username = htmlspecialchars($u['username']);
-        $photo = !empty($u['profile_photo']) 
-            ? htmlspecialchars($u['profile_photo']) 
+        $photo = !empty($u['profile_photo'])
+            ? htmlspecialchars($u['profile_photo'])
             : 'uploads/default-avatar.png';
         $isverified = (bool)$u['isverified'];
     }
 }
 ?>
 
-<header 
-    x-data="{ mobileOpen: false, profileOpen: false, searchOpen: false, scrolled: false }"
+<header
+    x-data="{
+        profileOpen: false,
+        searchOpen: false,
+        scrolled: false,
+        toggleSearch() {
+            this.searchOpen = !this.searchOpen;
+            this.$nextTick(() => {
+                const input = document.getElementById('header-search-input');
+                if (this.searchOpen && input) {
+                    input.focus();
+                }
+            });
+        }
+    }"
     @scroll.window="scrolled = window.pageYOffset > 10"
-    x-init="$watch('mobileOpen', value => document.body.style.overflow = value ? 'hidden' : '')"
+    x-init="$watch('searchOpen', value => { if (!value) { const input = document.getElementById('header-search-input'); if (input) input.blur(); } });"
     :class="scrolled ? 'bg-white/85 backdrop-blur-xl border-b border-slate-200/50 shadow-sm py-2' : 'bg-transparent border-b border-transparent py-4'"
-    class="sticky top-0 z-[1000] w-full transition-all duration-300 font-sans"
+    class="dc-site-header sticky top-0 z-[1000] w-full transition-all duration-300 font-sans"
 >
 
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-    <div class="max-w-6xl mx-auto px-4 md:px-6 flex justify-between items-center">
-        
+    <div class="dc-site-header__inner max-w-6xl mx-auto px-4 md:px-6 flex justify-between items-center">
+
         <a href="index.php" class="flex items-center gap-3 group select-none">
             <img src="/gorsel/deucritic-mark.svg" alt="Deucritic" class="w-10 h-10 md:w-11 md:h-11 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110 drop-shadow-sm">
             <div class="flex flex-col justify-center">
@@ -243,21 +256,16 @@ if($user_id){
 
         <div class="flex items-center gap-2 sm:gap-3">
 
-            <div class="flex items-center gap-0.5 rounded-xl border border-slate-200 bg-white p-1 text-[10px] font-black tracking-wider" aria-label="Language">
-                <a href="<?= htmlspecialchars(dc_lang_url('tr'), ENT_QUOTES, 'UTF-8') ?>" lang="tr" class="px-2 py-1 rounded-lg <?= dc_lang()==='tr' ? 'bg-[#1d352f] text-white' : 'text-slate-500 hover:text-slate-800' ?>">TR</a>
-                <a href="<?= htmlspecialchars(dc_lang_url('en'), ENT_QUOTES, 'UTF-8') ?>" lang="en" class="px-2 py-1 rounded-lg <?= dc_lang()==='en' ? 'bg-[#1d352f] text-white' : 'text-slate-500 hover:text-slate-800' ?>">EN</a>
-            </div>
-            
-            <button type="button" aria-label="Aramayı aç" :aria-expanded="searchOpen.toString()" @click="searchOpen = !searchOpen" 
+            <button type="button" aria-label="Aramayı aç" :aria-label="searchOpen ? 'Aramayı kapat' : 'Aramayı aç'" :aria-expanded="searchOpen.toString()" @click="toggleSearch()"
                 class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 border border-slate-200 hover:bg-white hover:text-[#b84834] hover:shadow-sm transition-all focus:outline-none">
                 <i class="fa-solid" :class="searchOpen ? 'fa-xmark' : 'fa-magnifying-glass'"></i>
             </button>
 
             <?php if($u): ?>
                 <div class="relative" @click.away="profileOpen = false">
-                    <button @click="profileOpen = !profileOpen" 
+                    <button @click="profileOpen = !profileOpen"
                         class="flex items-center gap-2 p-1.5 pr-4 bg-white border border-slate-200 rounded-[1.25rem] hover:shadow-md hover:border-slate-300 transition-all focus:outline-none">
-                        
+
                         <div class="w-8 h-8 rounded-full overflow-hidden relative border border-slate-100 flex-shrink-0">
                             <img src="<?= $photo ?>" class="w-full h-full object-cover">
                             <?php if($isverified): ?>
@@ -270,7 +278,7 @@ if($user_id){
                         <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 hidden md:block transition-transform" :class="profileOpen ? 'rotate-180' : ''"></i>
                     </button>
 
-                    <div x-show="profileOpen" 
+                    <div x-show="profileOpen"
                          x-transition:enter="transition ease-out duration-200"
                          x-transition:enter-start="opacity-0 translate-y-2 scale-95"
                          x-transition:enter-end="opacity-100 translate-y-0 scale-100"
@@ -278,7 +286,7 @@ if($user_id){
                          x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                          x-transition:leave-end="opacity-0 translate-y-2 scale-95"
                          class="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-[1100]" x-cloak>
-                        
+
                         <div class="px-4 py-3 bg-slate-50 rounded-xl mb-2 flex items-center gap-3 border border-slate-100/50">
                             <div class="flex flex-col">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Oturum Açık</span>
@@ -294,7 +302,7 @@ if($user_id){
     </div>
             <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
         </a>
-        
+
         <a href="dm.php" class="group flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 active:bg-slate-100 transition-colors">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-50 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white group-hover:scale-105 transition-all duration-300 shadow-sm group-hover:shadow-emerald-200">
@@ -307,7 +315,7 @@ if($user_id){
                 <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
             </div>
         </a>
-        
+
         <a href="akilli.php" class="group flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 active:bg-slate-100 transition-colors">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-purple-50 text-purple-500 group-hover:bg-purple-500 group-hover:text-white group-hover:scale-105 group-hover:rotate-3 transition-all duration-300 shadow-sm group-hover:shadow-purple-200">
@@ -326,19 +334,19 @@ if($user_id){
 
             <?php else: ?>
                 <a href="login.php" class="hidden sm:flex items-center text-sm font-extrabold text-slate-500 hover:text-slate-800 transition-colors px-3">Giriş</a>
-                <a href="register.php" class="px-5 py-2.5 bg-[#1d352f] hover:bg-[#b84834] text-white rounded-xl text-sm font-extrabold shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-2">
+                <a href="register.php" class="hidden sm:flex px-5 py-2.5 bg-[#1d352f] hover:bg-[#b84834] text-white rounded-xl text-sm font-extrabold shadow-md hover:shadow-lg transition-all active:scale-95 items-center gap-2">
                     Katıl <i class="fa-solid fa-arrow-right text-xs"></i>
                 </a>
             <?php endif; ?>
 
-            <button @click="mobileOpen = !mobileOpen" class="lg:hidden w-10 h-10 flex items-center justify-center bg-[#1d352f] text-white rounded-xl active:scale-95 transition-transform">
-                <i class="fa-solid text-lg" :class="mobileOpen ? 'fa-xmark' : 'fa-bars-staggered'"></i>
+            <button id="mobile-menu-button" type="button" aria-label="Menüyü aç" aria-controls="header-mobile-menu" aria-expanded="false" class="lg:hidden w-10 h-10 flex items-center justify-center bg-[#1d352f] text-white rounded-xl active:scale-95 transition-transform">
+                <i class="fa-solid fa-bars-staggered text-lg" aria-hidden="true"></i>
             </button>
 
         </div>
     </div>
 
-    <div x-show="searchOpen" 
+    <div id="header-search-panel" x-show="searchOpen"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="-translate-y-full opacity-0"
          x-transition:enter-end="translate-y-0 opacity-100"
@@ -347,16 +355,16 @@ if($user_id){
          x-transition:leave-end="-translate-y-full opacity-0"
          @keydown.window.escape="searchOpen = false"
          class="absolute top-full left-0 w-full bg-white/95 backdrop-blur-2xl border-b border-slate-200 shadow-[0_20px_40px_rgba(0,0,0,0.06)] p-6 md:p-10 z-[999]" x-cloak>
-        
+
         <div class="max-w-3xl mx-auto">
             <form action="search.php" method="GET" class="relative group">
                 <div class="absolute left-6 top-1/2 -translate-y-1/2 flex items-center text-slate-400 group-focus-within:text-[#b84834] transition-colors pointer-events-none">
                     <i class="fa-solid fa-magnifying-glass text-xl"></i>
                 </div>
-                
-                <input name="q" type="search" maxlength="100" autocomplete="off" placeholder="Başlık veya kullanıcı ara" 
+
+                <input id="header-search-input" name="q" type="search" maxlength="100" autocomplete="off" placeholder="Başlık veya kullanıcı ara"
                        class="w-full pl-16 pr-28 py-5 rounded-[2rem] bg-slate-50 border-2 border-slate-100 focus:border-[#b84834]/30 focus:bg-white focus:shadow-xl focus:shadow-[#b84834]/5 outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400 text-lg"
-                       x-init="$watch('searchOpen', value => value && $nextTick(() => $el.focus()))">
+                       x-init="$watch('searchOpen', value => value && $nextTick(() => $el.focus()))" />
 
                 <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-3 bg-[#1d352f] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#b84834] transition-all shadow-md active:scale-95">
                     Ara
@@ -372,17 +380,10 @@ if($user_id){
         </div>
     </div>
 
-    <div x-show="mobileOpen" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="translate-x-full opacity-0"
-         x-transition:enter-end="translate-x-0 opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="translate-x-0 opacity-100"
-         x-transition:leave-end="translate-x-full opacity-0"
-         class="fixed inset-0 bg-white/95 backdrop-blur-2xl z-[1001] lg:hidden flex flex-col p-6 pt-24 overflow-y-auto" x-cloak>
-        
+    <div id="header-mobile-menu" class="dc-mobile-menu fixed inset-0 bg-white/95 backdrop-blur-2xl z-[1001] lg:hidden flex flex-col p-6 pt-24 overflow-y-auto" aria-hidden="true">
+
         <div class="absolute top-6 left-6 flex items-center gap-4">
-            <button @click="mobileOpen = false" class="w-12 h-12 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 active:scale-90 transition-transform">
+            <button type="button" data-mobile-menu-close aria-label="Menüyü kapat" class="w-12 h-12 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 active:scale-90 transition-transform">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
             <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Kapat</span>
@@ -419,6 +420,44 @@ if($user_id){
     </div>
 </header>
 
+<script>
+(() => {
+    const menuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('header-mobile-menu');
+
+    if (!menuButton || !mobileMenu) return;
+
+    const menuIcon = menuButton.querySelector('i');
+    const closeButton = mobileMenu.querySelector('[data-mobile-menu-close]');
+
+    const setMenuOpen = (open) => {
+        mobileMenu.classList.toggle('is-open', open);
+        mobileMenu.setAttribute('aria-hidden', String(!open));
+        menuButton.setAttribute('aria-expanded', String(open));
+        menuButton.setAttribute('aria-label', open ? 'Menüyü kapat' : 'Menüyü aç');
+        document.body.style.overflow = open ? 'hidden' : '';
+
+        if (menuIcon) {
+            menuIcon.classList.toggle('fa-bars-staggered', !open);
+            menuIcon.classList.toggle('fa-xmark', open);
+        }
+    };
+
+    menuButton.addEventListener('click', () => {
+        setMenuOpen(menuButton.getAttribute('aria-expanded') !== 'true');
+    });
+    closeButton?.addEventListener('click', () => setMenuOpen(false));
+    mobileMenu.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => setMenuOpen(false));
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && menuButton.getAttribute('aria-expanded') === 'true') {
+            setMenuOpen(false);
+        }
+    });
+})();
+</script>
+
 <style>
 
 .nav-pill {
@@ -437,11 +476,11 @@ if($user_id){
     border-radius: 12px;
     font-size: 14px;
     font-weight: 700;
-    color: #475569; 
+    color: #475569;
     transition: all 0.2s;
 }
 .menu-item:hover {
-    background-color: #f8fafc; 
+    background-color: #f8fafc;
     color: #1d352f;
 }
 .menu-icon {
@@ -485,6 +524,92 @@ if($user_id){
 .mobile-nav-link:hover { color: #1d352f; }
 
 [x-cloak] { display: none !important; }
+
+.dc-mobile-menu {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1001;
+}
+.dc-mobile-menu.is-open { display: flex; }
+
+@media (max-width: 640px) {
+    .dc-site-header__inner {
+        min-height: 60px;
+        gap: 8px;
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+    }
+
+    .dc-site-header__inner > a:first-child {
+        min-width: 0;
+        gap: 8px;
+    }
+
+    .dc-site-header__inner > a:first-child img {
+        width: 36px;
+        height: 36px;
+    }
+
+    .dc-site-header__inner > a:first-child .dc-wordmark {
+        font-size: 18px;
+    }
+
+    .dc-site-header__inner > div:last-child > button {
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+    }
+
+    #header-search-panel {
+        padding: 16px;
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+    }
+
+    #header-search-panel form > div:first-child {
+        left: 16px;
+    }
+
+    #header-search-panel input {
+        padding: 14px 88px 14px 48px;
+        border-radius: 16px;
+        font-size: 16px;
+    }
+
+    #header-search-panel form > button {
+        right: 6px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        letter-spacing: .06em;
+    }
+
+    #header-search-panel > div > div {
+        gap: 8px;
+    }
+
+    #header-mobile-menu {
+        padding-top: max(84px, calc(env(safe-area-inset-top) + 64px));
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+
+    #header-mobile-menu > div:first-child {
+        top: max(16px, env(safe-area-inset-top));
+        left: max(20px, env(safe-area-inset-left));
+    }
+
+    .mobile-nav-link {
+        font-size: clamp(1.75rem, 8vw, 2.25rem);
+        line-height: 1.08;
+    }
+
+    #header-mobile-menu > div:nth-child(2) {
+        margin-top: 12px;
+        gap: 20px;
+    }
+}
 
 /* Input Search Kapatma İkonlarını Gizleme (Tarayıcı Varsayılanı) */
 input[type="text"]::-webkit-search-decoration,

@@ -386,6 +386,10 @@ if($is_logged_in){
 
                 try {
                     const res = await fetch('actions/post_entry.php', { method: 'POST', headers: { 'X-CSRF-Token': window.CSRF_TOKEN }, body: form });
+                    if (res.status === 401 || res.status === 403) {
+                        window.location.href = 'login.php';
+                        return;
+                    }
                     const data = await res.json();
                     if(!data.success) throw new Error(data.error || 'Bilinmeyen bir hata oluştu.');
                     location.reload(); 

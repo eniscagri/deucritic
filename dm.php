@@ -85,7 +85,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
-    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <script>
@@ -139,9 +138,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
         .typing-dot:nth-child(2) { animation-delay: -0.16s; }
         @keyframes typing { 0%, 80%, 100% { transform: scale(0); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
 
-        @keyframes ringShake { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-15deg); } 75% { transform: rotate(15deg); } }
-        .ringing-icon { animation: ringShake 0.5s infinite; }
-
         emoji-picker { width: 100%; height: 320px; --background: #ffffff; --indicator-color: #4f46e5; --border-radius: 1.5rem; border: none; }
         
         /* KUSURSUZ WHATSAPP BALON TASARIMI (Overlap Fix) */
@@ -194,12 +190,26 @@ $current_page = basename($_SERVER['PHP_SELF']);
         .tick-icon { transition: color 0.3s ease; font-size: 11px; }
     </style>
     <link rel="stylesheet" href="/css/brand.css">
+    <script>
+        (() => {
+            const updateDmViewportHeight = () => {
+                const viewportHeight = window.visualViewport
+                    ? window.visualViewport.height
+                    : window.innerHeight;
+                document.documentElement.style.setProperty('--dm-viewport-height', `${viewportHeight}px`);
+            };
+
+            updateDmViewportHeight();
+            window.addEventListener('resize', updateDmViewportHeight);
+            window.addEventListener('orientationchange', updateDmViewportHeight);
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', updateDmViewportHeight);
+            }
+        })();
+    </script>
 </head>
 <body class="flex flex-col md:flex-row h-[100dvh] w-full relative selection:bg-indigo-100 selection:text-indigo-900 dc-dm-page">
 
-    <audio id="remoteAudio" autoplay class="hidden"></audio>
-    <audio id="ringtoneAudio" src="https://actions.google.com/sounds/v1/alarms/phone_ringing.ogg" loop class="hidden"></audio>
-    <audio id="msgInAudio" src="https://actions.google.com/sounds/v1/cartoon/pop_hollow_reverb.ogg" class="hidden"></audio>
 
     <aside class="hidden md:flex flex-col w-[85px] lg:w-[280px] h-full border-r border-slate-200/60 bg-white z-50 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
         <div class="p-8 pt-safe flex items-center justify-center lg:justify-start gap-4">
@@ -249,10 +259,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         <a href="search_users.php" class="w-10 h-10 flex items-center justify-center bg-indigo-50 hover:bg-primary text-primary hover:text-white rounded-full transition-all duration-300 shadow-sm active:scale-95" title="Yeni Mesaj">
                             <i class="fa-solid fa-pen-to-square text-[15px]"></i>
                         </a>
-                    </div>
-                    <div class="relative group">
-                        <i class="fa-solid fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-[14px] group-focus-within:text-primary transition-colors"></i>
-                        <input type="text" id="userFilterInput" placeholder="Kişi veya mesaj ara..." class="w-full bg-slate-50/80 rounded-2xl pl-11 pr-4 py-3.5 outline-none focus:bg-white focus:ring-[3px] focus:ring-primary/15 transition-all border border-slate-200/80 font-medium placeholder-slate-400">
                     </div>
                 </div>
 
@@ -308,7 +314,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 </div>
             </aside>
 
-            <main class="<?= !$active ? 'hidden md:flex' : 'flex' ?> flex-1 flex-col bg-white md:bg-[#fafafa] h-[100dvh] md:h-full relative w-full overflow-hidden">
+            <main class="<?= !$active ? 'hidden md:flex' : 'flex' ?> dc-dm-chat flex-1 flex-col bg-white md:bg-[#fafafa] h-[100dvh] md:h-full relative w-full overflow-hidden">
                 
                 <?php if($chatUser): ?>
                     <header x-data="{ chatMenuOpen: false }" class="px-3 md:px-8 pb-3 md:pb-4 border-b border-slate-200/60 bg-white/95 backdrop-blur-2xl flex items-center justify-between sticky top-0 z-[50] shrink-0 shadow-sm transition-all pt-safe">
@@ -358,10 +364,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         </div>
 
                         <div class="flex items-center gap-1 md:gap-2">
-                            <button onclick="startRealCall('audio')" class="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-primary bg-indigo-50/80 hover:bg-primary hover:text-white rounded-full transition-all duration-300 shadow-sm active:scale-90" title="Sesli Ara">
-                                <i class="fa-solid fa-phone text-[14px]"></i>
-                            </button>
-
                             <div class="relative">
                                 <button @click="chatMenuOpen = !chatMenuOpen" 
                                         class="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all duration-300 active:scale-90" 
@@ -461,101 +463,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
         </div>
     </main>
 
-    <div id="callOverlay" class="hidden fixed inset-0 z-[9999] bg-slate-900/90 backdrop-blur-2xl flex-col items-center justify-center text-white transition-opacity duration-300">
-        
-        <div class="absolute top-[max(env(safe-area-inset-top),1.5rem)] mt-4 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-slate-200 font-medium tracking-wide text-[11px] sm:text-xs flex items-center gap-2 border border-white/10 shadow-lg">
-            <i class="fa-solid fa-lock text-[10px] text-emerald-400"></i> Uçtan Uca Şifreli
-        </div>
-        
-        <div class="relative mb-8 md:mb-12 mt-12 flex justify-center items-center">
-            <div id="rippleEffect" class="absolute w-32 h-32 md:w-40 md:h-40 rounded-full bg-indigo-500/30 animate-ping"></div>
-            <div class="absolute w-48 h-48 md:w-60 md:h-60 rounded-full border border-indigo-500/20 animate-pulse"></div>
-            
-            <img src="<?= $chatUser ? (!empty($chatUser['profile_photo']) ? $chatUser['profile_photo'] : 'https://ui-avatars.com/api/?background=random&color=fff&name='.urlencode($chatUser['username'])) : '' ?>" 
-                 class="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover ring-[4px] ring-white/20 z-10 relative shadow-[0_0_50px_rgba(99,102,241,0.5)]">
-        </div>
-        
-        <div class="flex flex-col items-center z-10 mb-12 md:mb-16">
-            <h3 class="text-3xl md:text-4xl font-black mb-2 tracking-tight text-center px-4 drop-shadow-md">
-                <?= $chatUser ? htmlspecialchars($chatUser['username']) : 'Arama Geliyor' ?>
-            </h3>
-            <p id="callTimerText" class="text-indigo-200 font-medium text-base md:text-lg tracking-wide hidden">00:00</p>
-            <p id="callStatusText" class="text-indigo-200 font-medium text-base md:text-lg tracking-wide">Aranıyor...</p>
-        </div>
-        
-        <div class="flex gap-6 md:gap-10 items-center h-24 pb-[max(env(safe-area-inset-bottom),1.5rem)] z-10">
-            
-            <div id="incomingCallActions" class="hidden gap-8 md:gap-12">
-                <div class="flex flex-col items-center gap-3">
-                    <button onclick="rejectCall()" class="w-16 h-16 md:w-20 md:h-20 bg-rose-500 hover:bg-rose-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(244,63,94,0.3)] transition-all active:scale-90 border border-rose-400/50">
-                        <i class="fa-solid fa-phone-slash text-2xl md:text-3xl"></i>
-                    </button>
-                    <span class="text-[11px] font-bold text-slate-300 tracking-wider">Reddet</span>
-                </div>
-                
-                <div class="flex flex-col items-center gap-3">
-                    <button onclick="acceptCall()" class="w-16 h-16 md:w-20 md:h-20 bg-emerald-500 hover:bg-emerald-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.4)] transition-all active:scale-90 border border-emerald-400/50 ringing-icon">
-                        <i class="fa-solid fa-phone text-2xl md:text-3xl"></i>
-                    </button>
-                    <span class="text-[11px] font-bold text-slate-300 tracking-wider">Cevapla</span>
-                </div>
-            </div>
-
-            <div id="activeCallActions" class="hidden gap-5 md:gap-8 items-start" x-data="{ isMuted: false, isSpeaker: false }">
-                
-                <div class="flex flex-col items-center gap-2 group">
-
-    <button id="muteBtn"
-        @click="isMuted = !isMuted; toggleMute(isMuted);"
-        :class="isMuted
-            ? 'bg-red-500 hover:bg-red-600 shadow-[0_0_30px_rgba(239,68,68,0.45)] border border-red-400/50'
-            : 'bg-slate-700 hover:bg-slate-600 shadow-[0_0_25px_rgba(255,255,255,0.08)] border border-white/10'"
-        class="relative overflow-hidden w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 ringing-icon">
-
-        <!-- Pulse -->
-        <div x-show="isMuted"
-             class="absolute inset-0 rounded-full bg-red-400/20 animate-ping">
-        </div>
-
-        <!-- Shine -->
-        <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-full"></div>
-
-        <!-- Icon -->
-        <i class="fa-solid relative z-10 text-2xl md:text-3xl transition-all duration-300"
-           :class="isMuted 
-                ? 'fa-microphone-slash text-white rotate-6' 
-                : 'fa-microphone text-white group-hover:scale-110'">
-        </i>
-
-    </button>
-
-    <span class="text-[11px] font-bold tracking-wider transition-all duration-300"
-          :class="isMuted ? 'text-red-300' : 'text-slate-300'"
-          x-text="isMuted ? 'Sessizde' : 'Mikrofon'">
-    </span>
-
-</div>
-
-                <div class="flex flex-col items-center gap-2 mt-2">
-                    <button onclick="endRealCall()" class="w-16 h-16 md:w-20 md:h-20 bg-rose-500 hover:bg-rose-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(244,63,94,0.4)] transition-all active:scale-90 border border-rose-400/50">
-                        <i class="fa-solid fa-phone-slash text-2xl md:text-3xl"></i>
-                    </button>
-                    <span class="text-[11px] font-bold text-rose-400 tracking-wider">Bitir</span>
-                </div>
-
-                <div class="flex flex-col items-center gap-2">
-                    <button id="speakerBtn" 
-                            @click="isSpeaker = !isSpeaker" 
-                            :class="isSpeaker ? 'bg-white text-slate-900 shadow-[0_0_20px_rgba(255,255,255,0.5)]' : 'bg-white/10 text-white border border-white/10 hover:bg-white/20'"
-                            class="w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center backdrop-blur-md transition-all active:scale-90">
-                        <i class="fa-solid fa-volume-high text-xl md:text-2xl"></i>
-                    </button>
-                    <span class="text-[10px] font-medium text-slate-300" x-text="isSpeaker ? 'Açık' : 'Hoparlör'"></span>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div id="lightbox" class="hidden fixed inset-0 z-[10000] bg-slate-900/98 backdrop-blur-lg flex items-center justify-center transition-opacity duration-300 opacity-0" onclick="closeLightbox()">
         <button class="absolute top-[max(env(safe-area-inset-top),1rem)] right-4 w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-rose-500 text-white rounded-full flex items-center justify-center backdrop-blur-sm transition-colors z-50">
             <i class="fa-solid fa-xmark text-xl"></i>
@@ -564,37 +471,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
     </div>
 
     <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-            Notification.requestPermission();
-        }
-    });
-
-    // SISTEM MESAJI GÖNDERME FONKSIYONU (ARAMA LOGLARI İÇİN)
-    function sendSystemMessage(text) {
-        const formData = new FormData();
-        formData.append('conversation_id', '<?= $current_convo ?>');
-        formData.append('receiver_id', '<?= $active ?>');
-        formData.append('csrf_token', document.querySelector('#form [name="csrf_token"]').value);
-        formData.append('message', text);
-        fetch("send_message.php", { method: "POST", body: formData }).then(() => load());
-    }
-
-    const searchInput = document.getElementById('userFilterInput');
-    if(searchInput) {
-        searchInput.addEventListener('keyup', function(e) {
-            const filter = e.target.value.toLowerCase();
-            document.querySelectorAll('.user-list-item').forEach(el => {
-                const name = el.getAttribute('data-name');
-                if (name.includes(filter)) {
-                    el.classList.remove('hidden'); el.classList.add('flex');
-                } else {
-                    el.classList.add('hidden'); el.classList.remove('flex');
-                }
-            });
-        });
-    }
-
     const chat = document.getElementById("chat");
     const msgInput = document.getElementById("msg");
     const scrollBtn = document.getElementById("scrollToBottomBtn");
@@ -823,155 +699,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
         setInterval(load, 2000);
         load();
 
-        /* ----- SESLİ ARAMA (WEBRTC) VE LOG SİSTEMİ ----- */
-        const myPeerId = 'deucritic_user_' + <?= $user_id ?>;
-        const friendPeerId = 'deucritic_user_' + <?= $active ?>;
-        const ringtone = document.getElementById('ringtoneAudio');
-        
-        let peer = new Peer(myPeerId);
-        let currentCall, localStream, pendingIncomingCall;
-        let callTimerInterval = null;
-        let callSeconds = 0;
-
-        window.toggleMute = function(isMuted) {
-            if (localStream) {
-                localStream.getAudioTracks()[0].enabled = !isMuted;
-            }
-        }
-
-        // CANLI ÇAĞRI SÜRESİ (TIMER) FONKSİYONLARI
-        function startCallTimer() {
-            callSeconds = 0;
-            const timerEl = document.getElementById('callTimerText');
-            const statusEl = document.getElementById('callStatusText');
-            
-            statusEl.classList.add('hidden');
-            timerEl.classList.remove('hidden');
-            timerEl.textContent = '00:00';
-
-            callTimerInterval = setInterval(() => {
-                callSeconds++;
-                const mins = String(Math.floor(callSeconds / 60)).padStart(2, '0');
-                const secs = String(callSeconds % 60).padStart(2, '0');
-                timerEl.textContent = `${mins}:${secs}`;
-            }, 1000);
-        }
-
-        function stopCallTimer() {
-            clearInterval(callTimerInterval);
-            document.getElementById('callTimerText').classList.add('hidden');
-            document.getElementById('callStatusText').classList.remove('hidden');
-            document.getElementById('callStatusText').textContent = 'Aranıyor...';
-        }
-
-        peer.on('call', function(call) {
-            pendingIncomingCall = call;
-            ringtone.play().catch(e=>console.log('Oto-çalma engellendi.'));
-
-            if (Notification.permission === 'granted') {
-                new Notification("Gelen Arama", { body: "<?= htmlspecialchars($chatUser['username']) ?> sesli arıyor!", icon: "/gorsel/favicon.ico?v=20261104" });
-            }
-
-            document.getElementById('callOverlay').classList.remove('hidden'); document.getElementById('callOverlay').classList.add('flex');
-            document.getElementById('callStatusText').textContent = 'Sesli Arama Geliyor...';
-            document.getElementById('callStatusText').classList.add('animate-pulse');
-
-            document.getElementById('incomingCallActions').classList.remove('hidden'); document.getElementById('incomingCallActions').classList.add('flex');
-            document.getElementById('activeCallActions').classList.add('hidden'); document.getElementById('activeCallActions').classList.remove('flex');
-        });
-
-        window.acceptCall = function() {
-            if(!pendingIncomingCall) return;
-            ringtone.pause(); ringtone.currentTime = 0;
-
-            document.getElementById('callStatusText').textContent = 'Bağlanıyor...';
-            document.getElementById('callStatusText').classList.remove('animate-pulse');
-            
-            document.getElementById('incomingCallActions').classList.add('hidden'); document.getElementById('incomingCallActions').classList.remove('flex');
-            document.getElementById('activeCallActions').classList.remove('hidden'); document.getElementById('activeCallActions').classList.add('flex');
-
-            navigator.mediaDevices.getUserMedia({video: false, audio: true})
-            .then(function(stream) {
-                localStream = stream;
-                pendingIncomingCall.answer(stream); 
-                currentCall = pendingIncomingCall;
-                
-                // Zamanlayıcıyı Başlat
-                startCallTimer();
-                
-                currentCall.on('stream', function(remoteStream) {
-                    const remoteAudio = document.getElementById('remoteAudio');
-                    remoteAudio.srcObject = remoteStream; remoteAudio.play();
-                });
-                
-                currentCall.on('close', function() { closeCallUI(); });
-            })
-            .catch(function(err) {
-                document.getElementById('callStatusText').textContent = 'Mikrofon İzni Gerekli!';
-                setTimeout(closeCallUI, 2000);
-            });
-        }
-
-        window.rejectCall = function() {
-            ringtone.pause(); ringtone.currentTime = 0;
-            if(pendingIncomingCall) { pendingIncomingCall.close(); pendingIncomingCall = null; }
-            
-            sendSystemMessage('❌ Cevapsız Sesli Arama');
-            closeCallUI();
-        }
-
-        window.startRealCall = function(type) {
-            document.getElementById('callOverlay').classList.remove('hidden'); document.getElementById('callOverlay').classList.add('flex');
-            document.getElementById('callStatusText').textContent = 'Aranıyor...';
-            document.getElementById('callStatusText').classList.add('animate-pulse');
-
-            document.getElementById('incomingCallActions').classList.add('hidden'); document.getElementById('incomingCallActions').classList.remove('flex');
-            document.getElementById('activeCallActions').classList.remove('hidden'); document.getElementById('activeCallActions').classList.add('flex');
-            
-            sendSystemMessage('📞 Sesli Arama Başlatıldı');
-
-            navigator.mediaDevices.getUserMedia({video: false, audio: true})
-            .then(function(stream) {
-                localStream = stream;
-                const call = peer.call(friendPeerId, stream);
-                currentCall = call;
-                
-                call.on('stream', function(remoteStream) {
-                    // Zamanlayıcıyı Başlat
-                    startCallTimer();
-                    const remoteAudio = document.getElementById('remoteAudio'); 
-                    remoteAudio.srcObject = remoteStream; remoteAudio.play();
-                });
-                
-                call.on('close', function() { closeCallUI(); });
-                call.on('error', function(err) { 
-                    stopCallTimer();
-                    document.getElementById('callStatusText').classList.remove('hidden');
-                    document.getElementById('callStatusText').textContent = 'Ulaşılamıyor...'; 
-                    setTimeout(closeCallUI, 2000); 
-                });
-            })
-            .catch(function(err) {
-                document.getElementById('callStatusText').textContent = 'Mikrofon erişimi reddedildi!'; setTimeout(closeCallUI, 2000);
-            });
-        }
-
-        window.endRealCall = function() {
-            if (currentCall) currentCall.close();
-            if (pendingIncomingCall) pendingIncomingCall.close();
-            closeCallUI();
-        }
-
-        function closeCallUI() {
-            stopCallTimer();
-            ringtone.pause(); ringtone.currentTime = 0;
-            document.getElementById('callOverlay').classList.add('hidden'); document.getElementById('callOverlay').classList.remove('flex');
-            
-            const remoteAudio = document.getElementById('remoteAudio');
-            if(remoteAudio) remoteAudio.srcObject = null;
-            if (localStream) localStream.getTracks().forEach(track => track.stop());
-            currentCall = null; pendingIncomingCall = null;
-        }
     <?php endif; ?>
     </script>
 </body>

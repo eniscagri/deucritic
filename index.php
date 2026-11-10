@@ -55,6 +55,80 @@ if ($is_logged_in) {
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@deucritic">
 
+    <script>
+        document.documentElement.classList.add('dc-home-pending');
+        const revealHomePage = () => document.documentElement.classList.remove('dc-home-pending');
+        document.addEventListener('DOMContentLoaded', revealHomePage, { once: true });
+        window.setTimeout(revealHomePage, 4000);
+    </script>
+    <style>
+        html.dc-home-pending body.dc-home-page > :not(#dc-page-loader) {
+            visibility: hidden !important;
+        }
+        #dc-page-loader {
+            display: none;
+        }
+        html.dc-home-pending #dc-page-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 2147483647;
+            display: block;
+            overflow: auto;
+            padding: 16px;
+            background: #f4efe4;
+            color: #1d352f;
+        }
+        .dc-loader-inner {
+            width: min(100%, 900px);
+            margin: 0 auto;
+        }
+        .dc-loader-bar, .dc-loader-line, .dc-loader-card {
+            background: linear-gradient(100deg, #e9e1d1 30%, #f8f4ec 50%, #e9e1d1 70%);
+            background-size: 200% 100%;
+            animation: dc-loader-shimmer 1.4s ease-in-out infinite;
+        }
+        .dc-loader-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 52px;
+            margin-bottom: 20px;
+        }
+        .dc-loader-mark { width: 38px; height: 38px; border-radius: 12px; }
+        .dc-loader-word { width: 125px; height: 18px; border-radius: 6px; }
+        .dc-loader-action { width: 42px; height: 42px; margin-left: auto; border-radius: 12px; }
+        .dc-loader-hero {
+            min-height: 220px;
+            margin-bottom: 20px;
+            padding: 24px;
+            border-left: 4px solid #b84834;
+            border-radius: 12px;
+            background: #1d352f;
+        }
+        .dc-loader-line { height: 14px; margin: 0 0 12px; border-radius: 5px; }
+        .dc-loader-line.short { width: 45%; }
+        .dc-loader-line.medium { width: 72%; }
+        .dc-loader-line.title { width: min(90%, 420px); height: 38px; margin: 24px 0 14px; }
+        .dc-loader-card {
+            height: 150px;
+            margin-bottom: 14px;
+            border: 1px solid #ded6c5;
+            border-radius: 12px;
+        }
+        @keyframes dc-loader-shimmer {
+            to { background-position: -200% 0; }
+        }
+        @media (max-width: 640px) {
+            #dc-page-loader { padding: 12px; }
+            .dc-loader-hero { min-height: 200px; padding: 20px; }
+            .dc-loader-line.title { height: 32px; }
+            .dc-loader-card { height: 130px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .dc-loader-bar, .dc-loader-line, .dc-loader-card { animation: none; }
+        }
+    </style>
+
     <script src="https://cdn.tailwindcss.com" defer></script>
     <script>
         tailwind.config = {
@@ -103,10 +177,25 @@ if ($is_logged_in) {
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-gray-100 min-h-screen font-sans">
+<body class="dc-home-page bg-gray-100 min-h-screen font-sans">
+  <div id="dc-page-loader" role="status" aria-label="Site yükleniyor">
+    <div class="dc-loader-inner" aria-hidden="true">
+      <div class="dc-loader-header">
+        <div class="dc-loader-bar dc-loader-mark"></div>
+        <div class="dc-loader-bar dc-loader-word"></div>
+        <div class="dc-loader-bar dc-loader-action"></div>
+      </div>
+      <section class="dc-loader-hero">
+        <div class="dc-loader-line short"></div>
+        <div class="dc-loader-line title"></div>
+        <div class="dc-loader-line medium"></div>
+        <div class="dc-loader-line short"></div>
+      </section>
+      <div class="dc-loader-card"></div>
+      <div class="dc-loader-card"></div>
+    </div>
+  </div>
   <?php include 'header.php'; ?>
-    <?php include 'parts/stories_bar.php'; ?>
-
   <section class="dc-hero" aria-labelledby="dc-home-title">
     <div>
       <p class="dc-hero__eyebrow">DOKUZ EYLÜL ÜNİVERSİTESİ <span>•</span> ÖĞRENCİ SÖZLÜĞÜ</p>
@@ -125,7 +214,7 @@ if ($is_logged_in) {
       <small>DEÜ<br>ÖĞRENCİ SÖZLÜĞÜ</small>
     </div>
   </section>
-  <main class="max-w-4xl mx-auto p-4 mt-6 space-y-8">
+  <main class="dc-home-main max-w-4xl mx-auto p-4 mt-6 space-y-8">
 
     <?php include 'npost.php'; ?>
     
