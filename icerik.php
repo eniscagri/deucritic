@@ -40,25 +40,27 @@ function timeAgoTr($datetime) {
 <section id="gundem" class="relative w-full max-w-6xl mx-auto mb-12">
     <div class="flex items-center justify-between mb-8 px-2 relative z-40">
         <div class="relative inline-block" id="gundemDropdownWrapper">
-            <h2 id="gundemToggleBtn" class="flex items-center gap-3 text-3xl font-extrabold text-slate-800 tracking-tight cursor-pointer select-none group">
-                <div class="relative">
-                    <div class="absolute inset-0 bg-orange-400 rounded-xl blur-md opacity-40 animate-pulse"></div>
-                    <div class="relative p-2.5 bg-gradient-to-tr from-yellow-500 via-orange-500 to-blue-500 rounded-xl shadow-md border border-white/30 flex items-center justify-center">
+            <h2>
+                <button type="button" id="gundemToggleBtn" aria-expanded="false" aria-controls="discoverMenu" class="flex items-center gap-3 text-3xl font-extrabold text-slate-800 tracking-tight cursor-pointer select-none group appearance-none border-0 bg-transparent p-0 text-left">
+                <span class="relative">
+                    <span class="absolute inset-0 bg-orange-400 rounded-xl blur-md opacity-40 animate-pulse"></span>
+                    <span class="relative p-2.5 bg-gradient-to-tr from-yellow-500 via-orange-500 to-blue-500 rounded-xl shadow-md border border-white/30 flex items-center justify-center">
                         <i class="fa-solid fa-compass text-white text-xl"></i>
-                    </div>
-                </div>
+                    </span>
+                </span>
                 <span class="bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500 transition-colors group-hover:from-orange-500 group-hover:to-blue-500">
                     Son Onep'ler
                 </span>
-                <div class="ml-1 p-1.5 rounded-full bg-white/60 shadow-sm border border-slate-200 transition-all group-hover:bg-white group-active:scale-95">
-                    <svg id="gundemChevron" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 group-hover:text-blue-500 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <span class="ml-1 p-1.5 rounded-full bg-white/60 shadow-sm border border-slate-200 transition-all group-hover:bg-white group-active:scale-95">
+                    <svg id="gundemChevron" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 group-hover:text-blue-500 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
                     </svg>
-                </div>
+                </span>
+                </button>
             </h2>
 
-            <a href="kesfet.php" id="discoverMenu" class="absolute top-full left-12 mt-4 px-5 py-3 bg-white/90 backdrop-blur-xl text-slate-700 font-bold rounded-2xl shadow-[0_20px_40px_-15px_rgba(249,115,22,0.2)] border border-white/50 opacity-0 -translate-y-3 pointer-events-none transition-all duration-300 hover:bg-orange-50 hover:text-orange-600 flex items-center gap-3">
-                <div class="p-1.5 bg-gradient-to-tr from-yellow-100 to-orange-100 rounded-lg text-orange-500">
+            <a href="kesfet.php" id="discoverMenu" class="absolute top-full left-12 mt-4 px-5 py-3 bg-primary/90 backdrop-blur-xl text-slate-700 font-bold rounded-2xl shadow-[0_20px_40px_-15px_rgba(249,115,22,0.2)] border border-white/50 opacity-0 -translate-y-3 pointer-events-none transition-all duration-300 hover:bg-orange-50 hover:text-orange-600 flex items-center gap-3">
+                <div class="p-1.5 bg-gradient-to-tr from-yellow-100 to-orange-100 rounded-lg text-green-500">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
                 Keşfet
