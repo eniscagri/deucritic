@@ -6,6 +6,7 @@ require_once __DIR__ . '/includes/config.php';
 $q = trim(substr((string) ($_GET['q'] ?? ''), 0, 100));
 $results = [];
 $topicResults = [];
+$entryResults = [];
 
 if ($q !== '') {
     $searchTerm = "%{$q}%";
@@ -20,6 +21,19 @@ if ($q !== '') {
     $stmt->bindValue(':description_q', $searchTerm, PDO::PARAM_STR);
     $stmt->execute();
     $topicResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmt = $pdo->prepare("
+        SELECT e.topic_id, e.content, e.created_at, t.title
+        FROM entries e
+        JOIN topics t ON t.id = e.topic_id
+        WHERE e.content LIKE :entry_content_q OR t.title LIKE :entry_title_q
+        ORDER BY e.created_at DESC
+        LIMIT 30
+    ");
+    $stmt->bindValue(':entry_content_q', $searchTerm, PDO::PARAM_STR);
+    $stmt->bindValue(':entry_title_q', $searchTerm, PDO::PARAM_STR);
+    $stmt->execute();
+    $entryResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function getProfilePhoto($photo) {
@@ -43,17 +57,17 @@ function getProfilePhoto($photo) {
         <section class="dc-search-intro">
             <p class="dc-label">Kampüsün gündemi</p>
             <h1 class="text-2xl font-bold mb-2">Aradığını bul</h1>
-            <p>Konu başlıklarında ve öğrenci profillerinde ara.</p>
+            <p>Gönderilerde, konu başlıklarında ve öğrenci profillerinde ara.</p>
         </section>
-        <form method="GET" class="dc-search-form mb-6 flex gap-2" role="search">
-            <label class="sr-only" for="people-search">Kullanıcı ara</label>
-            <input id="people-search" type="search" name="q" value="<?= htmlspecialchars($q, ENT_QUOTES, 'UTF-8') ?>" placeholder="Başlık, konu veya kullanıcı ara..." class="flex-1 p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary" autocomplete="off" maxlength="100">
+        <form action="/search.php" method="GET" class="dc-search-form mb-6 flex gap-2" role="search">
+            <label class="sr-only" for="people-search">Gönderi, konu veya kullanıcı ara</label>
+            <input id="people-search" type="search" name="q" value="<?= htmlspecialchars($q, ENT_QUOTES, 'UTF-8') ?>" placeholder="Gönderi, konu veya kullanıcı ara..." class="flex-1 p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary" autocomplete="off" maxlength="100" required>
             <button type="submit" class="bg-primary text-white px-4 py-3 rounded-xl hover:bg-cyan-600 transition"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Ara</span></button>
         </form>
 
         <?php if ($q === ''): ?>
             <div class="dc-search-empty p-4 bg-white rounded-xl shadow text-gray-600"><span class="dc-search-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span><strong>Keşfe hazır mısın?</strong><p>Bir kullanıcı adı ya da ilgi alanı yazarak başla.</p></div>
-        <?php elseif (empty($results) && empty($topicResults)): ?>
+        <?php elseif (empty($results) && empty($topicResults) && empty($entryResults)): ?>
             <div class="dc-search-empty p-4 bg-white rounded-xl shadow text-gray-600"><span class="dc-search-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span><strong>Bu aramayla eşleşme yok</strong><p>Yazımı kontrol et veya daha kısa bir kelime dene.</p></div>
         <?php else: ?>
           <?php if (!empty($topicResults)): ?>
@@ -68,10 +82,24 @@ function getProfilePhoto($photo) {
               <?php endforeach; ?>
             </ul>
           <?php endif; ?>
+          <?php if (!empty($entryResults)): ?>
+            <p class="dc-search-count">Gönderiler · <?= count($entryResults) ?> sonuç</p>
+            <ul class="space-y-3 mb-8">
+              <?php foreach ($entryResults as $entry): ?>
+                <li>
+                  <a href="topic.php?id=<?= (int) $entry['topic_id'] ?>" class="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                    <p data-dc-user-content class="font-bold text-gray-900"><?= htmlspecialchars($entry['title'], ENT_QUOTES, 'UTF-8') ?></p>
+                    <p data-dc-user-content class="mt-2 text-sm text-gray-600 line-clamp-3"><?= htmlspecialchars(strip_tags($entry['content']), ENT_QUOTES, 'UTF-8') ?></p>
+                    <span class="mt-2 block text-xs font-semibold text-gray-400"><?= htmlspecialchars((string) $entry['created_at'], ENT_QUOTES, 'UTF-8') ?></span>
+                  </a>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+          <?php endif; ?>
           <?php if (!empty($results)): ?>
             <p class="dc-search-count">Öğrenci profilleri · <?= count($results) ?> sonuç</p>
             <ul class="space-y-4">
-                <?php foreach ($results as $r): 
+                <?php foreach ($results as $r):
                     $profilePhoto = getProfilePhoto($r['profile_photo']);
                     $userLink = "uye.php?user=" . urlencode($r['username']);
                 ?>

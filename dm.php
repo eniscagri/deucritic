@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/i18n.php';
 
-require 'includes/config.php';
+require_once __DIR__ . '/includes/config.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -16,8 +16,14 @@ $user_id = $_SESSION['user_id'];
 $stmt = $pdo->prepare("SELECT username, profile_photo FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $me = $stmt->fetch();
+if (!$me) {
+    session_unset();
+    session_destroy();
+    header('Location: login.php');
+    exit;
+}
 
-/* Sohbet listesi ve Okunmamış Mesaj Sayacı */
+
 $stmt = $pdo->prepare("
     SELECT
         u.id, u.username, u.profile_photo, u.isverified,
@@ -44,6 +50,10 @@ $users = $stmt->fetchAll();
 
 /* Aktif Chat Kontrolü */
 $active = filter_input(INPUT_GET, 'user', FILTER_VALIDATE_INT) ?? null;
+if ($active && (int) $active === (int) $user_id) {
+    header('Location: dm.php');
+    exit;
+}
 $current_convo = null;
 $chatUser = null;
 $blockedByMe = false;
@@ -53,6 +63,10 @@ if ($active) {
     $stmt = $pdo->prepare("SELECT id, username, profile_photo, isverified, last_seen FROM users WHERE id=?");
     $stmt->execute([$active]);
     $chatUser = $stmt->fetch();
+    if (!$chatUser) {
+        header('Location: dm.php');
+        exit;
+    }
 
     if ($chatUser) {
         $stmt = $pdo->prepare('SELECT blocker_id FROM user_blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)');
@@ -65,10 +79,6 @@ if ($active) {
             }
         }
 
-        if (!$blockedByMe && !$blockedMe) {
-            $pdo->prepare("UPDATE messages SET viewed_on=1 WHERE sender_id=? AND receiver_id=? AND viewed_on=0")
-                ->execute([$active, $user_id]);
-        }
     }
 
     $stmt = $pdo->prepare("
@@ -78,6 +88,24 @@ if ($active) {
     ");
     $stmt->execute([$user_id, $active]);
     $current_convo = $stmt->fetchColumn();
+
+    if (!$blockedByMe && !$blockedMe && !$current_convo) {
+        try {
+            $pdo->beginTransaction();
+            $pdo->prepare("INSERT INTO conversations (last_message, last_message_at) VALUES ('Sohbet başladı', NOW())")->execute();
+            $current_convo = (int) $pdo->lastInsertId();
+
+            $insertMembers = $pdo->prepare("INSERT INTO conversation_users (conversation_id, user_id) VALUES (?, ?), (?, ?)");
+            $insertMembers->execute([$current_convo, $user_id, $current_convo, $active]);
+            $pdo->commit();
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log('DM conversation creation failed: ' . $e->getMessage());
+            $current_convo = null;
+        }
+    }
 }
 
 $my_avatar = !empty($me['profile_photo'])
@@ -643,6 +671,14 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                 </form>
                             <?php endif; ?>
                         </div>
+                    <?php elseif (!$current_convo): ?>
+                        <div class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50">
+                            <div class="w-16 h-16 mb-5 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center">
+                                <i class="fa-solid fa-triangle-exclamation text-2xl" aria-hidden="true"></i>
+                            </div>
+                            <h2 class="text-lg font-extrabold text-slate-900">Sohbet başlatılamadı</h2>
+                            <p class="mt-2 max-w-sm text-sm leading-relaxed text-slate-500">Lütfen sayfayı yenileyip tekrar dene. Sorun sürerse daha sonra yeniden dene.</p>
+                        </div>
                     <?php else: ?>
                     <div id="chat" class="dm-chat-canvas flex-1 overflow-y-auto p-4 md:p-8 space-y-3 chat-scroll font-inter relative">
                         <div id="typingIndicator" class="hidden flex justify-start msg-animate mt-2">
@@ -766,12 +802,24 @@ $current_page = basename($_SERVER['PHP_SELF']);
         setTimeout(() => { lightbox.classList.add('hidden'); lightboxImg.src = ''; }, 300);
     }
 
-    function load() {
-        if(!<?= $active ?: 0 ?>) return;
+    let messageLoadInProgress = false;
 
-        fetch(`get_messages.php?user=<?= $active ?>&last_id=${lastId}`)
-        .then(r => r.json())
-        .then(d => {
+    async function load() {
+        if (!<?= $active ?: 0 ?> || messageLoadInProgress) return;
+
+        messageLoadInProgress = true;
+        try {
+            const response = await fetch(
+                `get_messages.php?user=<?= (int) $active ?>&conversation_id=<?= (int) $current_convo ?>&last_id=${lastId}`,
+                { cache: 'no-store' }
+            );
+            if (!response.ok) {
+                throw new Error(`Mesajlar yüklenemedi (HTTP ${response.status}).`);
+            }
+            const d = await response.json();
+            if (!Array.isArray(d)) {
+                throw new Error('Mesaj sunucusundan geçersiz yanıt alındı.');
+            }
             if(d.length > 0) {
                 const isReadingHistory = isUserReadingOldMessages();
 
@@ -846,10 +894,14 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     scrollBtn.classList.add('flex', 'opacity-100', 'translate-y-0');
                 }
             }
-        });
+        } catch (error) {
+            console.error('DM mesajları yüklenemedi:', error);
+        } finally {
+            messageLoadInProgress = false;
+        }
     }
 
-    <?php if($active && !$blockedByMe && !$blockedMe): ?>
+    <?php if($active && !$blockedByMe && !$blockedMe && $current_convo): ?>
         // EMOJI İŞLEMLERİ (Mobil Klavye ile Uyumlu)
         const emojiBtn = document.getElementById("emojiBtn");
         const emojiContainer = document.getElementById("emojiContainer");
@@ -942,7 +994,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
             const val = msgInput.value;
             msgInput.value = ""; msgInput.style.height = 'auto';
             emojiContainer.classList.add('hidden');
-            if(fileInput.files.length > 0) clearImage();
 
             chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
 
@@ -952,6 +1003,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 if (!response.ok || result.status !== 'success') {
                     throw new Error(result.message || 'Mesaj gönderilemedi.');
                 }
+                if (fileInput.files.length > 0) clearImage();
                 load();
             })
             .catch(error => {

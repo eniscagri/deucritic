@@ -207,17 +207,14 @@ input { font-size: 16px !important; }
         <div class="login-photo w-full h-[250px] sm:h-[290px] md:h-auto md:w-[44%] relative overflow-hidden flex-shrink-0 bg-dark">
             <img src="<?= htmlspecialchars($bg, ENT_QUOTES, 'UTF-8') ?>" alt="DEÜ kampüsünden bir görünüm" class="absolute inset-0 w-full h-full object-cover" fetchpriority="high" onerror="this.onerror=null;this.src='/gorsel/bckg/bckgrondone.jpg';">
             <div class="absolute top-0 left-0 w-full p-5 sm:p-7 md:p-9 z-20 flex justify-between items-center">
-                <a href="index.php" aria-label="Ana sayfaya dön" class="w-10 h-10 bg-white/15 backdrop-blur-md rounded-full flex items-center justify-center border border-white/25 text-white hover:bg-white/25 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+                <a href="index.php" aria-label="Ana sayfaya dön" class="w-10 h-10 bg-white/15 backdrop-blur-md rounded-full flex items-center justify-center border border-white/25 text-primary hover:bg-white/25 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
                     <svg class="w-5 h-5 -ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
                 </a>
                 <span class="text-white font-extrabold tracking-[.18em] uppercase text-xs drop-shadow-md">Deucritic</span>
             </div>
 
             <div class="absolute bottom-7 sm:bottom-9 md:bottom-11 left-0 w-full px-6 sm:px-8 md:px-10 z-20">
-                <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/15 backdrop-blur-md text-white text-[11px] font-bold rounded-full border border-white/20 mb-3">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-300" aria-hidden="true"></span>
-                    DEÜ kampüsünün sesi
-                </div>
+
                 <h1 class="text-[2rem] sm:text-4xl md:text-5xl font-extrabold text-white mb-2 leading-[1.05] tracking-tight">
                     Kampüs<br class="hidden md:block"> burada başlar.
                 </h1>

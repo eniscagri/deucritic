@@ -329,12 +329,13 @@ if($user_id){
     <div id="header-search-panel" class="dc-search-panel absolute top-full left-0 w-full bg-white/95 backdrop-blur-2xl border-b border-slate-200 shadow-[0_20px_40px_rgba(0,0,0,0.06)] p-6 md:p-10 z-[999]" aria-hidden="true">
 
         <div class="max-w-3xl mx-auto">
-            <form action="search.php" method="GET" class="relative group">
+            <form action="/search.php" method="GET" role="search" class="relative group">
+                <label class="sr-only" for="header-search-input">Başlık, gönderi veya kullanıcı ara</label>
                 <div class="absolute left-6 top-1/2 -translate-y-1/2 flex items-center text-slate-400 group-focus-within:text-[#b84834] transition-colors pointer-events-none">
                     <i class="fa-solid fa-magnifying-glass text-xl"></i>
                 </div>
 
-                <input id="header-search-input" name="q" type="search" maxlength="100" autocomplete="off" placeholder="Başlık veya kullanıcı ara"
+                <input id="header-search-input" name="q" type="search" maxlength="100" autocomplete="off" required value="<?= htmlspecialchars((string) ($_GET['q'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="Başlık, gönderi veya kullanıcı ara"
                        class="w-full pl-16 pr-28 py-5 rounded-[2rem] bg-slate-50 border-2 border-slate-100 focus:border-[#b84834]/30 focus:bg-white focus:shadow-xl focus:shadow-[#b84834]/5 outline-none transition-all font-bold text-slate-800 placeholder:text-slate-400 text-lg"
                        />
 
@@ -345,9 +346,9 @@ if($user_id){
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2"><i class="fa-solid fa-bolt text-secondary mr-1"></i> Trend Başlıklar:</span>
-                <a href="search.php?q=yemekhane" class="tag-pill"><i class="fa-solid fa-utensils text-[#b84834]"></i> Yemekhane</a>
-                <a href="search.php?q=vizeler" class="tag-pill"><i class="fa-solid fa-fire text-rose-500"></i> Vizeler</a>
-                <a href="search.php?q=itiraf" class="tag-pill"><i class="fa-solid fa-mask text-purple-500"></i> İtiraf</a>
+                <a href="/search.php?q=yemekhane" class="tag-pill"><i class="fa-solid fa-utensils text-[#b84834]"></i> Yemekhane</a>
+                <a href="/search.php?q=vizeler" class="tag-pill"><i class="fa-solid fa-fire text-rose-500"></i> Vizeler</a>
+                <a href="/search.php?q=itiraf" class="tag-pill"><i class="fa-solid fa-mask text-purple-500"></i> İtiraf</a>
             </div>
         </div>
     </div>
@@ -428,7 +429,9 @@ if($user_id){
             searchIcon.classList.toggle('fa-magnifying-glass', !open);
             searchIcon.classList.toggle('fa-xmark', open);
         }
-        if (open && searchInput) searchInput.focus();
+        if (open && searchInput) {
+            window.requestAnimationFrame(() => searchInput.focus());
+        }
         if (!open && searchInput) searchInput.blur();
     };
 
@@ -452,6 +455,11 @@ if($user_id){
             setSearchOpen(open);
         });
     }
+    document.addEventListener('click', (event) => {
+        if (searchPanel && !searchPanel.contains(event.target) && (!searchButton || !searchButton.contains(event.target))) {
+            setSearchOpen(false);
+        }
+    });
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
             setMenuOpen(false);
@@ -617,7 +625,6 @@ if($user_id){
     }
 }
 
-/* Input Search Kapatma İkonlarını Gizleme (Tarayıcı Varsayılanı) */
 input[type="text"]::-webkit-search-decoration,
 input[type="text"]::-webkit-search-cancel-button,
 input[type="text"]::-webkit-search-results-button,
