@@ -305,15 +305,6 @@ if($user_id){
             </div>
         </a>
 
-        <a href="akilli.php" class="group flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 active:bg-slate-100 transition-colors">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-purple-50 text-purple-500 group-hover:bg-purple-500 group-hover:text-white group-hover:scale-105 group-hover:rotate-3 transition-all duration-300 shadow-sm group-hover:shadow-purple-200">
-                    <i class="fa-solid fa-brain text-sm"></i>
-                </div>
-                <span class="text-sm font-bold text-slate-600 group-hover:text-slate-900 transition-colors">Kahin</span>
-            </div>
-            <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
-        </a>
 
                         <div class="h-px bg-slate-100 my-2 mx-2"></div>
 

@@ -1,7 +1,7 @@
 <footer class="mt-20 pb-10 border-t border-gray-100 bg-white/30 backdrop-blur-xl">
     <div class="max-w-6xl mx-auto px-6 pt-12">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-10 mb-12">
-            
+
             <div class="md:col-span-5 space-y-4">
                 <a href="index.php" class="flex items-center gap-3 group">
                     <img src="/gorsel/deucritic-mark.svg" alt="Deucritic " class="w-10 h-10 transition-transform group-hover:rotate-12">
@@ -10,7 +10,7 @@
                 <p class="text-gray-500 text-sm leading-relaxed max-w-sm">
                     Dokuz Eylül Üniversitesi'nin dijital hafızası. Fikirlerin özgürce paylaşıldığı, kampüsün nabzının tutulduğu interaktif eleştiri, tartışma ve bilgi platformu.
                 </p>
-                
+
             </div>
 
             <div class="md:col-span-3 space-y-4">
@@ -29,7 +29,7 @@
                 <ul class="space-y-2 text-sm text-gray-500">
                     <li><a href="about.php" class="hover:text-primary transition-colors">Biz Kimiz?</a></li>
                     <li><a href="terms.php" class="hover:text-primary transition-colors">Kullanım Koşulları</a></li>
-                   
+
                 </ul>
             </div>
         </div>
@@ -43,12 +43,18 @@
           an eniscagri production
         </span>
 
-        <img 
-          src="/uploads/imza.png" 
-          alt="imza" 
+        <img
+          src="/uploads/imza.png"
+          alt="imza"
           class="h-6 opacity-70 group-hover:opacity-100 transition duration-300"
         >
       </div>
+
+            <div class="flex items-center gap-0.5 rounded-xl border border-slate-200 bg-white p-1 text-[10px] font-black tracking-wider" aria-label="Language">
+                <a href="<?= htmlspecialchars(dc_lang_url('tr'), ENT_QUOTES, 'UTF-8') ?>" lang="tr" class="px-2 py-1 rounded-lg <?= dc_lang()==='tr' ? 'bg-[#1d352f] text-white' : 'text-slate-500 hover:text-slate-800' ?>">TR</a>
+                <a href="<?= htmlspecialchars(dc_lang_url('en'), ENT_QUOTES, 'UTF-8') ?>" lang="en" class="px-2 py-1 rounded-lg <?= dc_lang()==='en' ? 'bg-[#1d352f] text-white' : 'text-slate-500 hover:text-slate-800' ?>">EN</a>
+            </div>
+
         </div>
     </div>
 </footer>

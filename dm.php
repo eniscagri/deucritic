@@ -19,7 +19,7 @@ $me = $stmt->fetch();
 
 /* Sohbet listesi ve Okunmamış Mesaj Sayacı */
 $stmt = $pdo->prepare("
-    SELECT 
+    SELECT
         u.id, u.username, u.profile_photo, u.isverified,
         m.message, m.created_at, m.sender_id, m.viewed_on,
         (SELECT COUNT(*) FROM messages WHERE sender_id = u.id AND receiver_id = ? AND viewed_on = 0) as unread
@@ -27,11 +27,16 @@ $stmt = $pdo->prepare("
     JOIN conversation_users cu2 ON cu1.conversation_id = cu2.conversation_id
     JOIN users u ON u.id = cu1.user_id
     LEFT JOIN messages m ON m.id = (
-        SELECT id FROM messages 
+        SELECT id FROM messages
         WHERE conversation_id = cu1.conversation_id
         ORDER BY id DESC LIMIT 1
     )
     WHERE cu2.user_id = ? AND u.id != ?
+      AND NOT EXISTS (
+          SELECT 1 FROM user_blocks ub
+          WHERE (ub.blocker_id = cu2.user_id AND ub.blocked_id = u.id)
+             OR (ub.blocker_id = u.id AND ub.blocked_id = cu2.user_id)
+      )
     ORDER BY COALESCE(m.id, 0) DESC
 ");
 $stmt->execute([$user_id, $user_id, $user_id]);
@@ -41,15 +46,30 @@ $users = $stmt->fetchAll();
 $active = filter_input(INPUT_GET, 'user', FILTER_VALIDATE_INT) ?? null;
 $current_convo = null;
 $chatUser = null;
+$blockedByMe = false;
+$blockedMe = false;
 
 if ($active) {
-    // Mesajları okundu olarak işaretle
-    $pdo->prepare("UPDATE messages SET viewed_on=1 WHERE sender_id=? AND receiver_id=? AND viewed_on=0")
-        ->execute([$active, $user_id]);
-
     $stmt = $pdo->prepare("SELECT id, username, profile_photo, isverified, last_seen FROM users WHERE id=?");
     $stmt->execute([$active]);
     $chatUser = $stmt->fetch();
+
+    if ($chatUser) {
+        $stmt = $pdo->prepare('SELECT blocker_id FROM user_blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)');
+        $stmt->execute([$user_id, $active, $active, $user_id]);
+        foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $blockerId) {
+            if ((int) $blockerId === (int) $user_id) {
+                $blockedByMe = true;
+            } else {
+                $blockedMe = true;
+            }
+        }
+
+        if (!$blockedByMe && !$blockedMe) {
+            $pdo->prepare("UPDATE messages SET viewed_on=1 WHERE sender_id=? AND receiver_id=? AND viewed_on=0")
+                ->execute([$active, $user_id]);
+        }
+    }
 
     $stmt = $pdo->prepare("
         SELECT cu1.conversation_id FROM conversation_users cu1
@@ -60,8 +80,8 @@ if ($active) {
     $current_convo = $stmt->fetchColumn();
 }
 
-$my_avatar = !empty($me['profile_photo']) 
-    ? $me['profile_photo'] 
+$my_avatar = !empty($me['profile_photo'])
+    ? $me['profile_photo']
     : 'https://ui-avatars.com/api/?background=6366f1&color=fff&bold=true&name='.urlencode($me['username']);
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>
@@ -69,21 +89,21 @@ $current_page = basename($_SERVER['PHP_SELF']);
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#f8fafc">
-    
+
     <title><?= $active ? 'Sohbet | Deucritic' : 'Mesajlar | Deucritic' ?></title>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    
+
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -91,7 +111,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { 
+                    fontFamily: {
                         sans: ['Plus Jakarta Sans', 'sans-serif'],
                         inter: ['Inter', 'sans-serif']
                     },
@@ -101,7 +121,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
             }
         }
     </script>
-    
+
     <style>
         /* CSS Değişkenleri ile Safe Area Yönetimi */
         :root {
@@ -109,17 +129,24 @@ $current_page = basename($_SERVER['PHP_SELF']);
             --sab: env(safe-area-inset-bottom);
         }
 
-        body { 
-            touch-action: manipulation; 
-            background-color: #f1f5f9; 
-            height: 100dvh; 
-            overflow: hidden; 
-            -webkit-tap-highlight-color: transparent; 
+        body {
+            touch-action: manipulation;
+            background-color: #f1f5f9;
+            height: var(--dm-viewport-height, 100dvh);
+            min-height: 0;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .dc-dm-page > main,
+        .dc-dm-page > main > div,
+        .dc-dm-chat {
+            min-height: 0;
         }
 
         /* IOS ZOOM FIX */
         textarea, input[type="text"] { font-size: 16px !important; }
-        
+
         /* SAFE AREA PADDINGS */
         .pt-safe { padding-top: max(var(--sat), 1rem) !important; }
         .pb-safe { padding-bottom: max(var(--sab), 1rem) !important; }
@@ -129,17 +156,17 @@ $current_page = basename($_SERVER['PHP_SELF']);
         .chat-scroll::-webkit-scrollbar { width: 5px; }
         .chat-scroll::-webkit-scrollbar-track { background: transparent; }
         .chat-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        
+
         @keyframes fadeInRise { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .msg-animate { animation: fadeInRise 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-        
+
         .typing-dot { animation: typing 1.4s infinite ease-in-out both; }
         .typing-dot:nth-child(1) { animation-delay: -0.32s; }
         .typing-dot:nth-child(2) { animation-delay: -0.16s; }
         @keyframes typing { 0%, 80%, 100% { transform: scale(0); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
 
         emoji-picker { width: 100%; height: 320px; --background: #ffffff; --indicator-color: #4f46e5; --border-radius: 1.5rem; border: none; }
-        
+
         /* KUSURSUZ WHATSAPP BALON TASARIMI (Overlap Fix) */
         .message-bubble {
             position: relative;
@@ -186,8 +213,184 @@ $current_page = basename($_SERVER['PHP_SELF']);
             gap: 6px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.02);
         }
-        
+
         .tick-icon { transition: color 0.3s ease; font-size: 11px; }
+
+        .dm-list-header {
+            background: linear-gradient(145deg, #fff 58%, #f5f7ff);
+        }
+        .dm-list-title {
+            letter-spacing: -.045em;
+        }
+        .dm-list-caption {
+            color: #94a3b8;
+        }
+        .dm-empty-state {
+            max-width: 280px;
+            margin: 3rem auto 0;
+            padding: 28px 20px;
+            border: 1px solid #eef0f6;
+            border-radius: 24px;
+            background: linear-gradient(160deg, #fff, #fafaff);
+            text-align: center;
+        }
+        .user-list-item {
+            min-height: 76px;
+            border-radius: 18px;
+        }
+        .user-list-item:focus-visible,
+        .dm-new-message:focus-visible,
+        .dm-back-button:focus-visible,
+        .dm-action-button:focus-visible {
+            outline: 3px solid rgba(79,70,229,.35);
+            outline-offset: 2px;
+        }
+        .dm-chat-header {
+            min-height: 76px;
+        }
+        .dm-chat-canvas {
+            background-color: #f7f8fc;
+            background-image: radial-gradient(rgba(99,102,241,.09) .7px, transparent .7px);
+            background-size: 18px 18px;
+            overscroll-behavior: contain;
+        }
+        .message-bubble {
+            padding: 9px 13px 10px;
+            border-radius: 19px;
+            box-shadow: 0 2px 8px rgba(15,23,42,.045);
+        }
+        .message-bubble.rounded-tr-sm {
+            border-top-right-radius: 6px;
+            background: linear-gradient(145deg, #5147df, #4338ca);
+        }
+        .message-bubble.rounded-tl-sm {
+            border-top-left-radius: 6px;
+        }
+        .dm-composer {
+            background: rgba(255,255,255,.96);
+            padding-bottom: max(env(safe-area-inset-bottom), 10px);
+        }
+        .dm-message-form {
+            border-radius: 24px;
+            box-shadow: 0 8px 26px rgba(15,23,42,.07);
+        }
+        .dm-action-button {
+            width: 44px;
+            height: 44px;
+        }
+        .dm-send-button {
+            width: 46px;
+            height: 46px;
+            background: #4f46e5;
+            box-shadow: 0 5px 14px rgba(79,70,229,.25);
+        }
+        .dm-send-button:hover {
+            background: #4338ca;
+        }
+
+        @media (max-width: 767px) {
+            body.dc-dm-page {
+                height: var(--dm-viewport-height, 100dvh);
+            }
+            .dc-dm-page > main {
+                flex: 1 1 0%;
+                height: auto;
+                min-height: 0;
+            }
+            .dc-dm-page > main > div {
+                height: 100%;
+                min-height: 0;
+            }
+            .dc-dm-chat {
+                height: 100% !important;
+                min-height: 0;
+            }
+            .dm-list-header {
+                padding-top: max(env(safe-area-inset-top), 12px);
+                padding-left: max(20px, env(safe-area-inset-left));
+                padding-right: max(20px, env(safe-area-inset-right));
+                padding-bottom: 18px;
+                border-bottom-color: #eef0f6;
+            }
+            .dm-list-title {
+                font-size: 28px;
+            }
+            #userListContainer {
+                padding: 10px 12px calc(88px + env(safe-area-inset-bottom));
+            }
+            .user-list-item {
+                min-height: 78px;
+                padding: 11px 10px;
+                border-bottom: 1px solid #f1f3f8;
+                border-radius: 16px;
+            }
+            .user-list-item:active {
+                background: #f5f6fb;
+                transform: scale(.99);
+            }
+            .dm-chat-header {
+                min-height: 68px;
+                padding-top: max(env(safe-area-inset-top), 8px);
+                padding-bottom: 8px;
+                padding-left: max(10px, env(safe-area-inset-left));
+                padding-right: max(12px, env(safe-area-inset-right));
+                box-shadow: 0 3px 14px rgba(15,23,42,.045);
+            }
+            .dm-back-button {
+                width: 40px;
+                height: 40px;
+                background: #f4f5fa;
+                color: #475569;
+            }
+            .dm-chat-canvas {
+                padding: 16px 13px 18px;
+            }
+            .message-bubble {
+                max-width: min(78vw, 420px);
+                font-size: 15px;
+            }
+            .dm-composer {
+                padding: 9px max(10px, env(safe-area-inset-right)) max(env(safe-area-inset-bottom), 10px) max(10px, env(safe-area-inset-left));
+                border-top-color: #eef0f6;
+            }
+            .dm-message-form {
+                gap: 3px;
+                padding: 5px;
+                border-color: #e8eaf2;
+                background: #fff;
+            }
+            .dm-action-button {
+                width: 40px;
+                height: 42px;
+                flex-shrink: 0;
+            }
+            .dm-send-button {
+                width: 44px;
+                height: 44px;
+            }
+            #msg {
+                max-height: 120px;
+                min-height: 42px;
+                padding-top: 11px;
+                padding-bottom: 10px;
+                line-height: 1.35;
+            }
+            #scrollToBottomBtn {
+                right: 14px;
+                bottom: 88px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .dc-dm-page *,
+            .dc-dm-page *::before,
+            .dc-dm-page *::after {
+                scroll-behavior: auto !important;
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+        }
     </style>
     <link rel="stylesheet" href="/css/brand.css">
     <script>
@@ -248,15 +451,19 @@ $current_page = basename($_SERVER['PHP_SELF']);
     </nav>
 
     <main class="flex-1 w-full h-full relative flex justify-center bg-white md:bg-[#f8fafc] md:p-6 lg:p-8">
-        
+
         <div class="w-full h-full md:rounded-[2rem] md:shadow-soft flex bg-white md:overflow-hidden md:border border-slate-200/60 max-w-[1400px]">
 
             <aside class="<?= $active ? 'hidden md:flex' : 'flex' ?> flex-col w-full md:w-[350px] lg:w-[400px] bg-white/50 border-r border-slate-100 h-full shrink-0 relative z-20">
-                
-                <div class="px-4 md:px-6 pb-4 border-b border-slate-100/80 bg-white/95 backdrop-blur-xl sticky top-0 z-10 shrink-0 pt-safe">
-                    <div class="flex justify-between items-center mb-5 md:mb-6 mt-2 md:mt-0">
-                        <h1 class="font-black text-2xl md:text-[26px] tracking-tight text-slate-900">Sohbetler</h1>
-                        <a href="search_users.php" class="w-10 h-10 flex items-center justify-center bg-indigo-50 hover:bg-primary text-primary hover:text-white rounded-full transition-all duration-300 shadow-sm active:scale-95" title="Yeni Mesaj">
+
+                <div class="dm-list-header px-4 md:px-6 pb-4 border-b border-slate-100/80 bg-white/95 backdrop-blur-xl sticky top-0 z-10 shrink-0 pt-safe">
+                    <div class="flex justify-between items-center mt-2 md:mt-0">
+                        <div>
+                            <p class="hidden md:block text-[10px] font-extrabold uppercase tracking-[.2em] text-indigo-500 mb-1">Deucritic mesajlar</p>
+                            <h1 class="dm-list-title font-black text-2xl md:text-[26px] text-slate-900">Sohbetler</h1>
+                            <p class="dm-list-caption text-xs md:text-sm font-medium mt-1">Konuşmaların burada, hep elinin altında.</p>
+                        </div>
+                        <a href="search_users.php" aria-label="Yeni mesaj başlat" class="dm-new-message w-11 h-11 flex items-center justify-center bg-indigo-50 hover:bg-primary text-primary hover:text-white rounded-2xl transition-all duration-300 shadow-sm active:scale-95" title="Yeni mesaj">
                             <i class="fa-solid fa-pen-to-square text-[15px]"></i>
                         </a>
                     </div>
@@ -264,18 +471,25 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
                 <div class="flex-1 overflow-y-auto chat-scroll p-2 md:p-3 space-y-1 pb-[calc(80px+var(--sab))]" id="userListContainer">
                     <?php if(empty($users)): ?>
-                        <div class="flex flex-col items-center justify-center h-full text-slate-400 opacity-80 mt-10">
-                            <i class="fa-regular fa-comments text-5xl mb-4 text-slate-200"></i>
-                            <span class="text-sm font-bold text-slate-400">Henüz mesajınız yok.</span>
+                        <div class="dm-empty-state flex flex-col items-center text-slate-400">
+                            <div class="w-14 h-14 mb-4 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center">
+                                <i class="fa-regular fa-comments text-2xl" aria-hidden="true"></i>
+                            </div>
+                            <span class="text-sm font-extrabold text-slate-800">Sohbetlerin burada görünecek</span>
+                            <span class="mt-2 text-xs leading-relaxed text-slate-500">Birini bulup ilk mesajını göndererek başlayabilirsin.</span>
+                            <a href="search_users.php" class="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#1d352f] px-4 py-2.5 text-xs font-extrabold text-white transition-colors hover:bg-primary">
+                                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                                Yeni sohbet başlat
+                            </a>
                         </div>
                     <?php endif; ?>
 
                     <?php foreach($users as $u): ?>
                         <a href="?user=<?= $u['id'] ?>" data-name="<?= strtolower($u['username']) ?>"
                            class="user-list-item group flex items-center gap-3 md:gap-4 p-3 rounded-2xl hover:bg-slate-50 transition-all duration-300 <?= $active == $u['id'] ? 'bg-slate-50 md:bg-white md:shadow-glow border border-transparent md:border-indigo-100/50' : 'border border-transparent' ?>">
-                            
+
                             <div class="relative shrink-0">
-                                <img src="<?= !empty($u['profile_photo']) ? $u['profile_photo'] : 'https://ui-avatars.com/api/?background=random&color=fff&name='.urlencode($u['username']) ?>" 
+                                <img src="<?= !empty($u['profile_photo']) ? $u['profile_photo'] : 'https://ui-avatars.com/api/?background=random&color=fff&name='.urlencode($u['username']) ?>"
                                      class="w-12 h-12 md:w-14 md:h-14 rounded-[1.2rem] object-cover shadow-sm transition-transform group-hover:scale-105">
                                 <?php if($u['unread'] > 0): ?>
                                     <span class="absolute -top-1 -right-1 bg-rose-500 min-w-[20px] h-5 px-1 flex items-center justify-center rounded-full text-[10px] text-white font-black ring-[3px] ring-white shadow-md">
@@ -297,7 +511,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                     </span>
                                 </div>
                                 <div class="flex items-center gap-1 text-[13px] md:text-[14px] leading-tight truncate <?= $u['unread'] > 0 ? 'text-slate-900 font-bold' : 'text-slate-500 font-medium' ?>">
-                                    <?php 
+                                    <?php
                                     if(isset($u['sender_id']) && $u['sender_id'] == $user_id) {
                                         if($u['viewed_on'] == 1) {
                                             echo '<i class="fa-solid fa-check-double text-blue-500 text-[10px]"></i>';
@@ -315,24 +529,24 @@ $current_page = basename($_SERVER['PHP_SELF']);
             </aside>
 
             <main class="<?= !$active ? 'hidden md:flex' : 'flex' ?> dc-dm-chat flex-1 flex-col bg-white md:bg-[#fafafa] h-[100dvh] md:h-full relative w-full overflow-hidden">
-                
+
                 <?php if($chatUser): ?>
-                    <header x-data="{ chatMenuOpen: false }" class="px-3 md:px-8 pb-3 md:pb-4 border-b border-slate-200/60 bg-white/95 backdrop-blur-2xl flex items-center justify-between sticky top-0 z-[50] shrink-0 shadow-sm transition-all pt-safe">
+                    <header x-data="{ chatMenuOpen: false }" class="dm-chat-header px-3 md:px-8 pb-3 md:pb-4 border-b border-slate-200/60 bg-white/95 backdrop-blur-2xl flex items-center justify-between sticky top-0 z-[50] shrink-0 shadow-sm transition-all pt-safe">
                         <div class="flex items-center gap-2 md:gap-4">
-                            <a href="dm.php" class="md:hidden w-10 h-10 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 active:scale-90 transition-all shrink-0">
-                                <i class="fa-solid fa-chevron-left text-[18px]"></i>
+                            <a href="dm.php" aria-label="Sohbet listesine dön" class="dm-back-button md:hidden w-10 h-10 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 active:scale-90 transition-all shrink-0">
+                                <i class="fa-solid fa-arrow-left text-[16px]" aria-hidden="true"></i>
                             </a>
-                            
+
                             <a href="profile.php?user=<?= $chatUser['id'] ?>" class="flex items-center gap-3 group p-1 md:p-1.5 -ml-1 md:-ml-1.5 rounded-2xl hover:bg-slate-50 transition-colors">
                                 <div class="relative shrink-0">
-                                    <img src="<?= !empty($chatUser['profile_photo']) ? $chatUser['profile_photo'] : 'https://ui-avatars.com/api/?background=random&color=fff&name='.urlencode($chatUser['username']) ?>" 
+                                    <img src="<?= !empty($chatUser['profile_photo']) ? $chatUser['profile_photo'] : 'https://ui-avatars.com/api/?background=random&color=fff&name='.urlencode($chatUser['username']) ?>"
                                          class="w-10 h-10 md:w-12 md:h-12 rounded-full md:rounded-[1rem] object-cover ring-2 ring-transparent group-hover:ring-indigo-100 transition-all shadow-sm">
-                                    <?php 
+                                    <?php
                                     if (!empty($chatUser['last_seen']) && round((time() - strtotime($chatUser['last_seen'])) / 60) < 3): ?>
                                         <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-[2.5px] border-white rounded-full"></span>
                                     <?php endif; ?>
                                 </div>
-                                
+
                                 <div class="flex flex-col min-w-0">
                                     <div class="font-extrabold text-slate-900 text-[15px] md:text-[16px] leading-tight truncate flex items-center gap-1.5 group-hover:text-primary transition-colors">
                                         <?= htmlspecialchars($chatUser['username']) ?>
@@ -340,23 +554,24 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                             <i class="fa-solid fa-circle-check text-blue-500 text-[12px]"></i>
                                         <?php endif; ?>
                                     </div>
-                                    <?php 
+                                    <?php
                                     $status_text = "Çevrimdışı";
                                     $status_color = "text-slate-400";
                                     if (!empty($chatUser['last_seen'])) {
                                         $last_seen_timestamp = strtotime($chatUser['last_seen']);
                                         $diff_minutes = round((time() - $last_seen_timestamp) / 60);
-                                        if ($diff_minutes < 3) { 
+                                        if ($diff_minutes < 3) {
                                             $status_text = "Çevrimiçi";
-                                            $status_color = "text-emerald-500"; 
+                                            $status_color = "text-emerald-500";
                                         } else if ($last_seen_timestamp >= strtotime("today")) {
                                             $status_text = "Bugün " . date("H:i", $last_seen_timestamp);
-                                        } else { 
+                                        } else {
                                             $status_text = date("d M H:i", $last_seen_timestamp);
                                         }
                                     }
                                     ?>
                                     <div class="text-[11px] md:text-[12px] <?= $status_color ?> font-semibold tracking-wide mt-0.5 truncate">
+                                        <?php if ($status_text === 'Çevrimiçi'): ?><span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 align-middle"></span><?php endif; ?>
                                         <?= $status_text ?>
                                     </div>
                                 </div>
@@ -365,25 +580,71 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
                         <div class="flex items-center gap-1 md:gap-2">
                             <div class="relative">
-                                <button @click="chatMenuOpen = !chatMenuOpen" 
-                                        class="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all duration-300 active:scale-90" 
+                                <button @click="chatMenuOpen = !chatMenuOpen"
+                                        class="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-all duration-300 active:scale-90"
                                         :class="chatMenuOpen ? 'bg-slate-100 text-slate-800' : ''">
                                     <i class="fa-solid fa-ellipsis-vertical text-[18px]"></i>
                                 </button>
-                                <div x-show="chatMenuOpen" @click.away="chatMenuOpen = false" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 p-1.5 z-50 overflow-hidden" x-cloak>
+                                <div x-show="chatMenuOpen" @click.away="chatMenuOpen = false" x-transition class="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 p-1.5 z-50 overflow-hidden" x-cloak>
                                     <a href="profile.php?user=<?= $chatUser['id'] ?>" class="flex items-center gap-3 w-full text-left px-3 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors">
                                         <i class="fa-regular fa-user text-slate-400 w-4 text-center"></i> Profili Gör
                                     </a>
                                     <div class="h-px bg-slate-100 my-1 mx-2"></div>
-                                    <button class="flex items-center gap-3 w-full text-left px-3 py-2.5 text-sm font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors">
-                                        <i class="fa-solid fa-ban text-rose-400 w-4 text-center"></i> Engelle
-                                    </button>
+                                    <?php if ($blockedByMe): ?>
+                                        <form method="post" action="block_user.php">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                                            <input type="hidden" name="user_id" value="<?= (int) $chatUser['id'] ?>">
+                                            <button type="submit" name="action" value="unblock" class="flex items-center gap-3 w-full text-left px-3 py-2.5 text-sm font-bold text-emerald-700 hover:bg-emerald-50 rounded-xl transition-colors">
+                                                <i class="fa-solid fa-user-check text-emerald-500 w-4 text-center"></i> Engeli kaldır
+                                            </button>
+                                        </form>
+                                    <?php elseif ($blockedMe): ?>
+                                        <form method="post" action="block_user.php" onsubmit="return confirm('Bu kullanıcıyı da engellemek istiyor musun?')">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                                            <input type="hidden" name="user_id" value="<?= (int) $chatUser['id'] ?>">
+                                            <button type="submit" name="action" value="block" class="flex items-center gap-3 w-full text-left px-3 py-2.5 text-sm font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors">
+                                                <i class="fa-solid fa-ban text-rose-400 w-4 text-center"></i> Engelle
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <form method="post" action="block_user.php" onsubmit="return confirm('Bu kullanıcıyı engellemek ve sohbeti gizlemek istiyor musun?')">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                                            <input type="hidden" name="user_id" value="<?= (int) $chatUser['id'] ?>">
+                                            <button type="submit" name="action" value="block" class="flex items-center gap-3 w-full text-left px-3 py-2.5 text-sm font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors">
+                                                <i class="fa-solid fa-ban text-rose-400 w-4 text-center"></i> Engelle
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
                     </header>
 
-                    <div id="chat" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-3 chat-scroll font-inter relative bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-white md:bg-[#fafafa]">
+                    <?php if ($blockedByMe || $blockedMe): ?>
+                        <div class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50">
+                            <div class="w-16 h-16 mb-5 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center">
+                                <i class="fa-solid fa-ban text-2xl" aria-hidden="true"></i>
+                            </div>
+                            <h2 class="text-lg font-extrabold text-slate-900">Bu sohbet kullanılamıyor</h2>
+                            <p class="mt-2 max-w-sm text-sm leading-relaxed text-slate-500">
+                                <?= $blockedByMe ? 'Bu kullanıcıyı engelledin. Mesajlaşmak için önce engeli kaldır.' : 'Bu kullanıcı mesajlaşmayı engellemiş.' ?>
+                            </p>
+                            <?php if ($blockedByMe): ?>
+                                <form method="post" action="block_user.php" class="mt-5">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                                    <input type="hidden" name="user_id" value="<?= (int) $chatUser['id'] ?>">
+                                    <button type="submit" name="action" value="unblock" class="rounded-xl bg-[#1d352f] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-primary">Engeli kaldır</button>
+                                </form>
+                            <?php elseif ($blockedMe): ?>
+                                <form method="post" action="block_user.php" onsubmit="return confirm('Bu kullanıcıyı da engellemek istiyor musun?')" class="mt-5">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                                    <input type="hidden" name="user_id" value="<?= (int) $chatUser['id'] ?>">
+                                    <button type="submit" name="action" value="block" class="rounded-xl bg-rose-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-rose-700">Engelle</button>
+                                </form>
+                            <?php endif; ?>
+                        </div>
+                    <?php else: ?>
+                    <div id="chat" class="dm-chat-canvas flex-1 overflow-y-auto p-4 md:p-8 space-y-3 chat-scroll font-inter relative">
                         <div id="typingIndicator" class="hidden flex justify-start msg-animate mt-2">
                             <div class="bg-white border border-slate-100 px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex gap-1.5 items-center">
                                 <div class="w-2 h-2 bg-slate-300 rounded-full typing-dot"></div>
@@ -393,19 +654,19 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         </div>
                     </div>
 
-                    <button id="scrollToBottomBtn" class="hidden absolute bottom-[90px] md:bottom-[100px] right-4 md:right-8 bg-white text-slate-600 border border-slate-200 w-10 h-10 rounded-full shadow-lg items-center justify-center z-30 hover:bg-slate-50 transition-transform transform translate-y-2 opacity-0">
-                        <i class="fa-solid fa-chevron-down text-[14px]"></i>
+                    <button id="scrollToBottomBtn" type="button" aria-label="En yeni mesaja git" class="hidden absolute bottom-[90px] md:bottom-[100px] right-4 md:right-8 bg-white text-slate-600 border border-slate-200 w-10 h-10 rounded-full shadow-lg items-center justify-center z-30 hover:bg-slate-50 transition-transform transform translate-y-2 opacity-0">
+                        <i class="fa-solid fa-chevron-down text-[14px]" aria-hidden="true"></i>
                     </button>
 
-                    <footer class="relative bg-white border-t border-slate-100 shrink-0 pb-safe z-50 px-3 md:px-6 pt-2 pb-2 md:pt-4 md:pb-4">
-                        
+                    <footer class="dm-composer relative bg-white border-t border-slate-100 shrink-0 pb-safe z-50 px-3 md:px-6 pt-2 pb-2 md:pt-4 md:pb-4">
+
                         <div id="emojiContainer" class="hidden absolute bottom-full left-0 w-full md:w-auto md:min-w-[320px] md:left-6 z-[100] bg-white shadow-[0_-15px_40px_rgba(0,0,0,0.12)] rounded-t-[2rem] md:rounded-3xl border border-slate-100 msg-animate mb-1 overflow-hidden">
                             <div class="w-full flex justify-center py-3 md:hidden bg-slate-50/80 border-b border-slate-100">
                                 <div class="w-12 h-1.5 bg-slate-200 rounded-full"></div>
                             </div>
                             <emoji-picker class="light"></emoji-picker>
                         </div>
-                        
+
                         <div id="imagePreviewContainer" class="hidden absolute bottom-[100%] left-0 w-full p-3 md:p-4 bg-white/95 backdrop-blur-md border-t border-slate-100 flex items-center gap-4 transition-all z-10 shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
                             <div class="relative group">
                                 <img id="imagePreview" src="" class="h-16 w-16 md:h-20 md:w-20 object-cover rounded-xl md:rounded-2xl border border-slate-200 shadow-sm">
@@ -419,14 +680,14 @@ $current_page = basename($_SERVER['PHP_SELF']);
                             </div>
                         </div>
 
-                        <form id="form" class="flex items-end gap-2 md:gap-3 max-w-5xl mx-auto bg-slate-50/80 p-1.5 md:p-2.5 rounded-[1.5rem] md:rounded-[2rem] border border-slate-200 focus-within:bg-white focus-within:ring-[3px] focus-within:ring-primary/15 transition-all shadow-sm relative">
+                        <form id="form" class="dm-message-form flex items-end gap-2 md:gap-3 max-w-5xl mx-auto bg-slate-50/80 p-1.5 md:p-2.5 rounded-[1.5rem] md:rounded-[2rem] border border-slate-200 focus-within:bg-white focus-within:ring-[3px] focus-within:ring-primary/15 transition-all shadow-sm relative">
                             <input type="hidden" name="conversation_id" value="<?= $current_convo ?>">
                             <input type="hidden" name="receiver_id" value="<?= $active ?>">
                             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
-                            
+
                             <input type="file" id="fileInput" name="photo" class="hidden" accept="image/*">
-                            <button type="button" onclick="document.getElementById('fileInput').click()" class="w-10 h-10 md:w-11 md:h-11 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-indigo-50 rounded-full transition-colors shrink-0 active:scale-95">
-                                <i class="fa-solid fa-paperclip text-[16px] md:text-[18px]"></i>
+                            <button type="button" aria-label="Fotoğraf ekle" onclick="document.getElementById('fileInput').click()" class="dm-action-button w-10 h-10 md:w-11 md:h-11 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-indigo-50 rounded-full transition-colors shrink-0 active:scale-95">
+                                <i class="fa-solid fa-paperclip text-[16px] md:text-[18px]" aria-hidden="true"></i>
                             </button>
 
                             <div class="flex-1 relative pb-0.5 md:pb-1">
@@ -435,16 +696,17 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                     placeholder="Mesaj yaz..."></textarea>
                             </div>
 
-                            <button type="button" id="emojiBtn" class="w-10 h-10 md:w-11 md:h-11 flex items-center justify-center text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-full transition-colors shrink-0 active:scale-95">
-                                <i class="fa-regular fa-face-smile text-[18px] md:text-[20px]"></i>
+                            <button type="button" id="emojiBtn" aria-label="Emoji seç" class="dm-action-button w-10 h-10 md:w-11 md:h-11 flex items-center justify-center text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-full transition-colors shrink-0 active:scale-95">
+                                <i class="fa-regular fa-face-smile text-[18px] md:text-[20px]" aria-hidden="true"></i>
                             </button>
 
-                            <button type="submit" id="submitBtn" class="bg-primary hover:bg-indigo-600 disabled:opacity-50 text-white w-10 h-10 md:w-11 md:h-11 flex items-center justify-center rounded-full shadow-md transition-all shrink-0 group active:scale-90">
-                                <i class="fa-solid fa-paper-plane text-[14px] md:text-[15px] -ml-0.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" id="sendIcon"></i>
+                            <button type="submit" id="submitBtn" aria-label="Mesajı gönder" class="dm-send-button bg-primary hover:bg-indigo-600 disabled:opacity-50 text-white w-10 h-10 md:w-11 md:h-11 flex items-center justify-center rounded-full shadow-md transition-all shrink-0 group active:scale-90">
+                                <i class="fa-solid fa-paper-plane text-[14px] md:text-[15px] -ml-0.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" id="sendIcon" aria-hidden="true"></i>
                                 <i class="fa-solid fa-circle-notch animate-spin hidden text-[14px]" id="loadingIcon"></i>
                             </button>
                         </form>
                     </footer>
+                    <?php endif; ?>
 
                 <?php else: ?>
                     <div class="hidden md:flex flex-col items-center justify-center h-full text-center p-8 bg-slate-50/50">
@@ -478,7 +740,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     const sendIcon = document.getElementById("sendIcon");
     const loadingIcon = document.getElementById("loadingIcon");
     let lastId = 0;
-    
+
     function escapeHTML(str) {
         if (!str) return '';
         return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
@@ -506,7 +768,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
     function load() {
         if(!<?= $active ?: 0 ?>) return;
-        
+
         fetch(`get_messages.php?user=<?= $active ?>&last_id=${lastId}`)
         .then(r => r.json())
         .then(d => {
@@ -518,7 +780,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     const safeMessage = escapeHTML(m.message);
                     const time = new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                     const isSystemMessage = safeMessage.includes('📞') || safeMessage.includes('❌');
-                    
+
                     let statusIcon = '';
                     if (isMe) {
                         if(m.viewed_on == 1) {
@@ -529,17 +791,17 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     }
 
                     let messageContent = safeMessage.replace(
-                        /\[IMAGE\](.*?)\[\/IMAGE\]/g, 
+                        /\[IMAGE\](.*?)\[\/IMAGE\]/g,
                         '<div class="overflow-hidden rounded-xl mt-1 mb-1"><img src="$1" onload="if(!isUserReadingOldMessages()) chat.scrollTo({ top: chat.scrollHeight, behavior: \'smooth\' })" class="w-full md:w-64 h-auto max-h-64 object-cover cursor-zoom-in active:opacity-70 transition-opacity border border-black/5 bg-slate-100" alt="Fotoğraf" onclick="openLightbox(this.src); event.stopPropagation();"></div>'
                     );
-                    
+
                     const div = document.createElement("div");
-                    
+
                     // SİSTEM MESAJLARI
                     if (isSystemMessage) {
                         div.className = `flex justify-center msg-animate mb-3`;
                         div.innerHTML = `<div class="system-bubble">${messageContent} <span class="opacity-60 ml-1 font-normal">${time}</span></div>`;
-                    } 
+                    }
                     // NORMAL MESAJLAR
                     else {
                         div.className = `flex ${isMe ? 'justify-end' : 'justify-start'} msg-animate group mb-2`;
@@ -587,7 +849,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         });
     }
 
-    <?php if($active): ?>
+    <?php if($active && !$blockedByMe && !$blockedMe): ?>
         // EMOJI İŞLEMLERİ (Mobil Klavye ile Uyumlu)
         const emojiBtn = document.getElementById("emojiBtn");
         const emojiContainer = document.getElementById("emojiContainer");
@@ -600,14 +862,14 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
         emojiBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            msgInput.blur(); 
+            msgInput.blur();
             emojiContainer.classList.toggle('hidden');
         });
 
         picker.addEventListener('emoji-click', event => {
             const text = msgInput.value;
             msgInput.value = text.slice(0, lastCursorPos) + event.detail.unicode + text.slice(lastCursorPos);
-            lastCursorPos += event.detail.unicode.length; 
+            lastCursorPos += event.detail.unicode.length;
             msgInput.setSelectionRange(lastCursorPos, lastCursorPos);
             autoResizeTextarea();
         });
@@ -676,19 +938,25 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
             submitBtn.disabled = true;
             sendIcon.classList.add('hidden'); loadingIcon.classList.remove('hidden');
-            
+
             const val = msgInput.value;
-            msgInput.value = ""; msgInput.style.height = 'auto'; 
+            msgInput.value = ""; msgInput.style.height = 'auto';
             emojiContainer.classList.add('hidden');
             if(fileInput.files.length > 0) clearImage();
 
             chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
 
             fetch("send_message.php", { method: "POST", body: formData })
-            .then(() => load())
-            .catch(() => {
+            .then(async response => {
+                const result = await response.json();
+                if (!response.ok || result.status !== 'success') {
+                    throw new Error(result.message || 'Mesaj gönderilemedi.');
+                }
+                load();
+            })
+            .catch(error => {
                 msgInput.value = val;
-                alert("İnternet bağlantınızı kontrol edip tekrar deneyin.");
+                alert(error.message || "İnternet bağlantınızı kontrol edip tekrar deneyin.");
             }).finally(() => {
                 submitBtn.disabled = false;
                 sendIcon.classList.remove('hidden'); loadingIcon.classList.add('hidden');

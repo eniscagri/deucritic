@@ -1,5 +1,6 @@
 <?php
 require 'includes/config.php';
+require_once __DIR__ . '/includes/content_moderation.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -30,6 +31,17 @@ $msg = trim((string) ($_POST['message'] ?? ''));
 
 if (!$receiver || !$convo || $receiver === $sender || mb_strlen($msg, 'UTF-8') > 5000) {
     $respond(400, 'Geçersiz veri.');
+}
+
+$blocked = $pdo->prepare('SELECT 1 FROM user_blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?) LIMIT 1');
+$blocked->execute([$sender, $receiver, $receiver, $sender]);
+if ($blocked->fetchColumn()) {
+    $respond(403, 'Bu kullanıcıyla mesajlaşamazsınız.');
+}
+
+$moderationCategory = dcFindProhibitedContent($msg);
+if ($moderationCategory !== null) {
+    $respond(422, 'Mesaj küfür, hakaret veya +18 içerik içeremez.');
 }
 
 $membership = $pdo->prepare('SELECT COUNT(DISTINCT user_id) FROM conversation_users WHERE conversation_id = ? AND user_id IN (?, ?)');
@@ -76,7 +88,7 @@ if (!empty($image_tag)) {
 try {
     $stmt = $pdo->prepare("INSERT INTO messages (conversation_id, sender_id, receiver_id, message) VALUES (?, ?, ?, ?)");
     $stmt->execute([$convo, $sender, $receiver, $final_message]);
-    
+
     echo json_encode(['status' => 'success'], JSON_UNESCAPED_UNICODE);
 } catch (PDOException $e) {
     error_log('Message save failed: ' . $e->getMessage());

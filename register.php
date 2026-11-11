@@ -9,17 +9,16 @@ if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_byt
 
 $errors = []; $success = false;
 $username = ''; $email = ''; $recovery_email = ''; $school = ''; $grade = '';
+$termsAccepted = false;
 
-// AKILLI DEÜ MAİL DOĞRULAMA FONKSİYONU
 function validate_deu_email($email) {
     $email = trim(strtolower($email));
-    
+
     // Uzantı kontrolü
     if (!preg_match('/@(ogr\.)?deu\.edu\.tr$/', $email)) return false;
-    
+
     $local = explode('@', $email)[0];
-    
-    // Durum 1: Sadece Numara ise (Örn: 2020123456)
+
     if (ctype_digit($local)) {
         if (!preg_match('/^20\d{8}$/', $local)) return false;
         $num = substr($local, 2);
@@ -28,12 +27,11 @@ function validate_deu_email($email) {
         if (preg_match('/^(\d)\1{7}$/', $num)) return false;
         return true;
     }
-    
-    // Durum 2: İsim.Soyisim formatı ise
+
     if (preg_match('/^[a-z0-9]+[._-][a-z0-9._-]+$/', $local)) {
         return true;
     }
-    
+
     return false;
 }
 
@@ -41,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         $errors[] = 'Geçersiz istek.';
     }
-    
+
     $username = trim($_POST['username'] ?? '');
     $email = trim(strtolower($_POST['email'] ?? ''));
     $recovery_email = trim($_POST['recovery_email'] ?? '');
@@ -49,19 +47,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password2 = $_POST['password2'] ?? '';
     $school = trim($_POST['school'] ?? '');
     $grade = trim($_POST['grade_level'] ?? '');
+    $termsAccepted = ($_POST['terms_consent'] ?? '') === '1';
+
+    if (!$termsAccepted) {
+        $errors[] = 'Kayıt olmak için Kullanım Koşulları ve Gizlilik bölümünü okuyup kabul etmelisin.';
+    }
 
     if (!$username || !$email || !$password || !$password2) {
         $errors[] = 'Lütfen tüm temel alanları doldur.';
     }
-    
+
     if (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $username)) {
         $errors[] = 'Takma ad 3-20 karakter ve uygun formatta olmalı.';
     }
-    
+
     if (!validate_deu_email($email)) {
         $errors[] = 'Geçerli bir DEÜ öğrenci e-postası gir.';
     }
-    
+
     $is_numeric_email = false;
     if ($email) {
         $local_part = explode('@', $email)[0];
@@ -83,12 +86,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (strlen($password) < 8) {
         $errors[] = 'Şifre en az 8 karakter olmalı.';
     }
-    
+
     if ($password !== $password2) {
         $errors[] = 'Şifreler uyuşmuyor.';
     }
 
-    // Veritabanı Kayıt İşlemi
     if (empty($errors)) {
         try {
             $stmt = $pdo->prepare("SELECT id, username, email, recovery_email FROM users WHERE email = :email OR username = :username OR recovery_email = :recovery_email");
@@ -105,15 +107,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $hash = password_hash($password, PASSWORD_DEFAULT);
 
                 $stmt = $pdo->prepare("
-                    INSERT INTO users (username, email, recovery_email, password_hash, school, grade_level, created_at) 
+                    INSERT INTO users (username, email, recovery_email, password_hash, school, grade_level, created_at)
                     VALUES (?, ?, ?, ?, ?, ?, NOW())
                 ");
                 $stmt->execute([$username, $email, $recovery_email, $hash, $school, $grade]);
 
                 $_SESSION['user_id'] = $pdo->lastInsertId();
                 unset($_SESSION['csrf_token']);
-                
-                header('Location: welcome.php'); 
+
+                header('Location: welcome.php');
                 exit;
             }
         } catch (PDOException $e) {
@@ -138,8 +140,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         };
-        function togglePassword(id, btnIconId){ 
-            const i = document.getElementById(id); 
+        function togglePassword(id, btnIconId){
+            const i = document.getElementById(id);
             const icon = document.getElementById(btnIconId);
             if (i.type === "password") {
                 i.type = "text";
@@ -150,12 +152,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     </script>
-    <style> 
-        body{ font-family:'Inter', sans-serif; -webkit-tap-highlight-color: transparent; } 
+    <style>
+        body{ font-family:'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         input, select, textarea { font-size: 16px !important; }
         .animate-bounce-slow { animation: bounce 4s infinite; }
         @keyframes bounce { 0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)} }
-        /* JS ile gizleme/gösterme efekti için */
+
         #recoveryEmailDiv { transition: all 0.4s ease-in-out; overflow: hidden; }
     </style>
     <link rel="icon" href="/gorsel/favicon.ico?v=20261104" type="image/x-icon" />
@@ -336,7 +338,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             "Yönetim Bilişim Sistemleri",
             "Turizm İşletmeciliği (İngilizce)"
         ],
-       
+
         "Güzel Sanatlar ve Tasarım" => [
             "Fotoğraf",
             "Fotoğraf (KKTC UYRUKLU)",
@@ -346,7 +348,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             "Film Tasarımı ve Yazarlığı (KKTC Uyruklu)",
             "Film Tasarımı ve Yönetmenliği",
             "Film Tasarımı ve Yönetmenliği (KKTC UYRUKLU)"
-        
+
         ],
         "Mimarlık ve Şehircilik" => [
             "Mimarlık",
@@ -454,6 +456,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </select>
             </div>
 
+            <label for="terms_consent" class="flex items-start gap-3 p-4 rounded-2xl border border-slate-200 bg-slate-50/70 cursor-pointer transition-colors hover:border-primary/40 hover:bg-primary/[0.03]">
+                <input type="checkbox" id="terms_consent" name="terms_consent" value="1" <?= $termsAccepted ? 'checked' : '' ?>
+                    class="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-300 text-primary focus:ring-primary" required>
+                <span class="text-sm leading-relaxed text-slate-600">
+                    <a href="terms.php#privacy" target="_blank" rel="noopener noreferrer" class="font-bold text-primary underline underline-offset-2 hover:text-[#963926]">Kullanım Koşulları ve Gizlilik bölümünü</a>
+                    okudum ve kabul ediyorum.
+                </span>
+            </label>
+
             <button type="submit" class="w-full bg-primary text-white p-4 rounded-2xl font-extrabold text-lg hover:bg-[#963926] hover:-translate-y-1 hover:shadow-lg transition-all active:scale-95">
                 Hesabımı Oluştur 🚀
             </button>
@@ -474,7 +485,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     function checkEmailType() {
         const value = emailInput.value.toLowerCase().trim();
         const regex = /^((20\d{8})|([a-z0-9]+[._-][a-z0-9._-]+))@(ogr\.)?deu\.edu\.tr$/;
-        
+
         if (value && !regex.test(value)) {
             emailError.classList.remove("hidden");
             emailInput.classList.add("border-red-300");
@@ -503,8 +514,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     emailInput.addEventListener('input', checkEmailType);
-    
-    // Sayfa ilk yüklendiğinde eski veriler (hata sonrası) varsa kontrol et
+
     window.addEventListener('DOMContentLoaded', checkEmailType);
 </script>
 

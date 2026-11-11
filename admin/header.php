@@ -16,19 +16,19 @@
         </div>
         <div class="flex items-center gap-3">
              <a href="index.php" class="px-3 py-2 bg-green-500 text-white rounded">Ana Sayfa</a>
-             
+
              <a href="users.php" class="px-3 py-2 bg-blue-500 text-white rounded">Kullanıcılar</a>
-             
+
              <a href="req.php" class="px-3 py-2 bg-yellow-500 text-white rounded">İstekler</a>
              <a href="header_ip.php" class="px-3 py-2 bg-green-500 text-white rounded">Detaylı IP</a>
-             
+
             <form method="get" class="flex items-center">
-                
-                 
+
+
                 <input name="q" value="<?=htmlspecialchars($_GET['q'] ?? '')?>" class="px-3 py-2 border rounded-l" placeholder="Search users...">
                 <button class="px-3 py-2 bg-amber-500 text-white rounded-r">Search</button>
             </form>
-            <a href="admin_logout.php" class="px-3 py-2 bg-red-500 text-white rounded">Logout</a>
+            <a href="logout.php" class="px-3 py-2 bg-red-500 text-white rounded">Oturumu kapat</a>
         </div>
     </div>
 </header>

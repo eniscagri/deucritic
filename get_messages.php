@@ -18,6 +18,14 @@ if (!$other || $other === $me || $last === false || ($last !== null && $last < 0
     exit;
 }
 
+$blocked = $pdo->prepare('SELECT 1 FROM user_blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?) LIMIT 1');
+$blocked->execute([$me, $other, $other, $me]);
+if ($blocked->fetchColumn()) {
+    http_response_code(403);
+    echo json_encode([]);
+    exit;
+}
+
 // Messages are only returned for a user pair that shares a conversation.
 $conversation = $pdo->prepare('SELECT COUNT(*) FROM conversation_users cu1 JOIN conversation_users cu2 ON cu1.conversation_id = cu2.conversation_id WHERE cu1.user_id = ? AND cu2.user_id = ?');
 $conversation->execute([$me, $other]);

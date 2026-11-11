@@ -1,5 +1,6 @@
 <?php
 require_once '../includes/config.php';
+require_once __DIR__ . '/../includes/content_moderation.php';
 
 // Sadece giriş yapmış kullanıcılar başlık oluşturabilir
 if (!isset($_SESSION['user_id'])) {
@@ -18,6 +19,11 @@ if ($title === '') {
     // Başlık boşsa anasayfaya döner
     header('Location: ../index.php');
     exit;
+}
+
+if (dcFindProhibitedContent($title) !== null) {
+    http_response_code(422);
+    exit('Başlık küfür, hakaret veya +18 içerik içeremez.');
 }
 
 // Başlık ekle

@@ -40,7 +40,7 @@ if($is_logged_in){
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title><?= htmlspecialchars($topic['title']) ?> - Deucritic</title>
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -69,7 +69,7 @@ if($is_logged_in){
     <style>
         body {
             background-color: #f8fafc;
-            background-image: radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.05) 0px, transparent 50%), 
+            background-image: radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.05) 0px, transparent 50%),
                               radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
             background-attachment: fixed;
             -webkit-font-smoothing: antialiased;
@@ -95,10 +95,10 @@ if($is_logged_in){
 <?php include 'header.php'; ?>
 
 <main class="max-w-3xl mx-auto mt-8 mb-24 px-4">
-    
+
     <div class="glass-panel rounded-[2rem] p-8 mb-10 relative overflow-hidden group">
         <div class="absolute -top-10 -right-10 w-48 h-48 bg-gradient-to-bl from-orange-300/30 to-brandBlue/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
-        
+
         <div class="relative z-10 flex flex-col gap-4">
             <h1 class="text-3xl md:text-4xl font-black text-slate-900 leading-tight tracking-tight">
                 <span data-dc-user-content><?= htmlspecialchars($topic['title']) ?></span>
@@ -124,16 +124,16 @@ if($is_logged_in){
                     </a>
                 <?php endif; ?>
                 <div class="h-1 w-1 rounded-full bg-slate-300"></div>
-                    
+
                     <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/60 border border-slate-200/60 shadow-sm cursor-default hover:bg-white transition-colors">
     <svg class="w-4 h-4 text-brandOrange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
     </svg>
-    
+
     <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mt-0.5">
-        <?php 
+        <?php
             $ts = strtotime($topic['created_at']);
-            
+
             // Gece yarısına göre gün hesabı (En doğru yöntem)
             $bugun = strtotime('today midnight');
             $konu_gunu = strtotime('midnight', $ts);
@@ -158,14 +158,14 @@ if($is_logged_in){
             }
         ?>
     </span>
-    
+
     <span class="text-slate-300 font-bold mx-0.5">•</span>
-    
+
     <span class="text-[11px] font-black text-slate-500 tracking-widest mt-0.5">
         <?= date('H:i', $ts) ?>
     </span>
 </div>
-                    
+
             </div>
         </div>
     </div>
@@ -186,7 +186,7 @@ if($is_logged_in){
                     <p class="text-slate-400 text-sm mt-1">İlk düşünceni paylaşarak konuşmayı başlat.</p>
                 </div>
             <?php else: foreach ($entries as $e): ?>
-                <?php 
+                <?php
                     $likeCount = fetch_entry_like_count($pdo, $e['id']);
                     $userLiked = $is_logged_in ? has_user_liked($pdo, $current_user_id, $e['id']) : false;
                     $likeIconClass = $userLiked ? 'text-pink-500 fill-current' : 'text-slate-400 group-hover/like:text-pink-400';
@@ -238,17 +238,17 @@ if($is_logged_in){
     <?php if($is_logged_in): ?>
     <section class="mt-12" id="comments">
         <div class="glass-panel p-2 rounded-[2rem] focus-within:ring-4 focus-within:ring-orange-500/20 focus-within:border-orange-300 transition-all duration-300 relative bg-white/90">
-            
-            <textarea id="entryContent" maxlength="500" rows="3" placeholder="<?= $randomPlaceholder ?>" 
+
+            <textarea id="entryContent" maxlength="500" rows="3" placeholder="<?= $randomPlaceholder ?>"
                       class="w-full bg-transparent border-none rounded-t-[1.5rem] p-5 text-slate-800 text-lg font-medium resize-none focus:ring-0 focus:outline-none placeholder-slate-400"></textarea>
-            
+
             <div id="imagePreviewContainer" class="hidden px-5 pb-3 relative">
                 <img id="imagePreview" src="" class="h-20 w-auto rounded-xl object-cover border border-slate-200">
                 <button id="removeImageBtn" class="absolute top-1 left-[4.5rem] bg-slate-900/70 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-500 transition-colors">&times;</button>
             </div>
 
             <div id="emojiPanel" class="hidden absolute left-5 bottom-20 bg-white border border-slate-200 shadow-xl rounded-2xl p-3 grid grid-cols-5 gap-2 z-50">
-                <?php $emojis = ['😀','😂','🥰','😎','🤔','😡','👍','🔥','💯','✨']; 
+                <?php $emojis = ['😀','😂','🥰','😎','🤔','😡','👍','🔥','💯','✨'];
                 foreach($emojis as $emoji): ?>
                     <button class="emoji-select w-8 h-8 flex items-center justify-center hover:bg-slate-100 rounded-lg text-xl transition-colors"><?= $emoji ?></button>
                 <?php endforeach; ?>
@@ -257,7 +257,7 @@ if($is_logged_in){
             <div class="flex flex-col sm:flex-row items-center justify-between p-3 bg-slate-50/50 rounded-b-[1.5rem] border-t border-slate-100">
                 <div class="flex items-center gap-2 mb-3 sm:mb-0 relative">
                     <button id="emojiBtn" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white hover:bg-slate-100 shadow-sm border border-slate-200 transition-colors text-lg" title="Emoji">😀</button>
-                    
+
                     <label class="w-10 h-10 flex items-center justify-center rounded-xl bg-white hover:bg-slate-100 shadow-sm border border-slate-200 transition-colors cursor-pointer text-slate-500 hover:text-brandBlue" title="Fotoğraf Ekle">
                         <input type="file" id="imageInput" accept="image/*" class="hidden">
                         <i class="fa-solid fa-camera text-lg"></i>
@@ -330,7 +330,7 @@ if($is_logged_in){
         const postBtn = document.getElementById('postEntryBtn');
         const charCount = document.getElementById('charCount');
         const fileInput = document.getElementById('imageInput');
-        
+
         // Emoji Seçici
         const emojiBtn = document.getElementById('emojiBtn');
         const emojiPanel = document.getElementById('emojiPanel');
@@ -385,14 +385,19 @@ if($is_logged_in){
                 postBtn.querySelector('span').textContent = 'Gönderiliyor...';
 
                 try {
-                    const res = await fetch('actions/post_entry.php', { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': window.CSRF_TOKEN }, body: form });
+                    const res = await fetch('actions/post_entry.php', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'X-CSRF-Token': window.CSRF_TOKEN },
+                        body: form
+                    });
                     if (res.status === 401) {
                         window.location.href = 'login.php';
                         return;
                     }
                     const data = await res.json();
                     if(!data.success) throw new Error(data.error || 'Bilinmeyen bir hata oluştu.');
-                    location.reload(); 
+                    location.reload();
                 } catch(err){
                     showToast(err.message);
                 } finally {
@@ -421,7 +426,7 @@ if($is_logged_in){
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ entry_id: entryId })
                     });
-                    
+
                     const result = await response.json();
                     if (result.status === 'success') {
                         countSpan.innerText = result.new_count > 0 ? result.new_count : 'Beğen';

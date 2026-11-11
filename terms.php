@@ -24,6 +24,16 @@ function toggleSection(id){
     const el = document.getElementById(id);
     el.classList.toggle('hidden');
 }
+window.addEventListener('DOMContentLoaded', () => {
+    let section = location.hash ? document.getElementById(location.hash.slice(1)) : null;
+    if (!section && location.hash === '#privacy') {
+        section = document.getElementById('privacy_en');
+    }
+    if (section) {
+        section.classList.remove('hidden');
+        section.scrollIntoView({ block: 'start' });
+    }
+});
 </script>
     <link rel="stylesheet" href="/css/brand.css">
 </head>
@@ -116,7 +126,7 @@ function toggleSection(id){
     </section>
 
     <?php else: ?>
-  
+
 
     <section class="space-y-6">
 
@@ -192,7 +202,7 @@ function toggleSection(id){
 
     <?php endif; ?>
 
-   
+
 
     <?php include 'footer.php'; ?>
 

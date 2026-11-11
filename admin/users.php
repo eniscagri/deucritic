@@ -1,35 +1,50 @@
 <?php
-require 'config.php'; 
+require 'config.php';
 
-
-$search = trim($_GET['q'] ?? '');
+$search = trim((string) ($_GET['q'] ?? ''));
+$search = function_exists('mb_substr') ? mb_substr($search, 0, 100, 'UTF-8') : substr($search, 0, 100);
 $page = max(1, (int)($_GET['p'] ?? 1));
 $perPage = 20;
-$offset = ($page - 1) * $perPage;
 
+$cols = array_values(array_filter(
+    ['id', 'username', 'email', 'school', 'grade_level', 'created_at', 'last_ip', 'last_login', 'warnings', 'is_banned'],
+    static function ($column) use ($pdo) {
+        return admin_column_exists($pdo, 'users', $column);
+    }
+));
+$searchColumns = array_values(array_filter(
+    ['username', 'email', 'school'],
+    static function ($column) use ($pdo) {
+        return admin_column_exists($pdo, 'users', $column);
+    }
+));
+$orderColumn = admin_column_exists($pdo, 'users', 'created_at') ? 'created_at' : 'id';
+$where = '';
+$params = [];
 if ($search !== '') {
     $like = "%$search%";
-    $stmt = $pdo->prepare("
-        SELECT * FROM users 
-        WHERE username LIKE ? OR email LIKE ? OR school LIKE ? 
-        ORDER BY created_at DESC 
-        LIMIT ?, ?
-    ");
-    $stmt->bindValue(1, $like, PDO::PARAM_STR);
-    $stmt->bindValue(2, $like, PDO::PARAM_STR);
-    $stmt->bindValue(3, $like, PDO::PARAM_STR);
-    $stmt->bindValue(4, $offset, PDO::PARAM_INT);
-    $stmt->bindValue(5, $perPage, PDO::PARAM_INT);
-} else {
-    $stmt = $pdo->prepare("SELECT * FROM users ORDER BY created_at DESC LIMIT ?, ?");
-    $stmt->bindValue(1, $offset, PDO::PARAM_INT);
-    $stmt->bindValue(2, $perPage, PDO::PARAM_INT);
+    if ($searchColumns !== []) {
+        $where = ' WHERE (' . implode(' OR ', array_map(static function ($column) {
+            return '`' . $column . '` LIKE ?';
+        }, $searchColumns)) . ')';
+        $params = array_fill(0, count($searchColumns), $like);
+    }
 }
+$countStmt = $pdo->prepare('SELECT COUNT(*) FROM users' . $where);
+$countStmt->execute($params);
+$totalUsers = (int) $countStmt->fetchColumn();
+$totalPages = max(1, (int) ceil($totalUsers / $perPage));
+$page = min($page, $totalPages);
+$offset = ($page - 1) * $perPage;
+
+$stmt = $pdo->prepare('SELECT `' . implode('`, `', $cols) . '` FROM users' . $where . ' ORDER BY `' . $orderColumn . '` DESC LIMIT ?, ?');
+foreach ($params as $index => $value) {
+    $stmt->bindValue($index + 1, $value, PDO::PARAM_STR);
+}
+$stmt->bindValue(count($params) + 1, $offset, PDO::PARAM_INT);
+$stmt->bindValue(count($params) + 2, $perPage, PDO::PARAM_INT);
 $stmt->execute();
 $users = $stmt->fetchAll();
-
-$totalUsers = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
-$totalPages = ceil($totalUsers / $perPage);
 
 ?>
 
@@ -50,15 +65,7 @@ $totalPages = ceil($totalUsers / $perPage);
         <table class="w-full text-left border-collapse">
             <thead class="bg-slate-100">
                 <tr>
-                    <?php
-                    
-                    $cols = [
-                        'id','username','email','password_hash','bio','school','grade_level',
-                        'created_at','profile_photo','twitter','last_login','last_active',
-                        'password_reset_token','password_reset_expiry','isverified','warnings',
-                        'is_banned','last_ip','is_verified','verify_code','verify_expiry'
-                    ];
-                    foreach($cols as $c): ?>
+                    <?php foreach($cols as $c): ?>
                         <th class="p-2 border-b"><?=htmlspecialchars($c)?></th>
                     <?php endforeach; ?>
                     <th class="p-2 border-b">Actions</th>
@@ -68,31 +75,32 @@ $totalPages = ceil($totalUsers / $perPage);
                 <?php foreach($users as $u): ?>
                     <tr class="border-b hover:bg-slate-50">
                         <?php foreach($cols as $c): ?>
-                            <td class="p-2"><?=htmlspecialchars($u[$c] ?? '')?></td>
+                            <td class="p-2"><?php if ($c === 'username'): ?><a class="text-blue-700 font-semibold hover:underline" href="user_detail.php?id=<?= (int) $u['id'] ?>"><?=htmlspecialchars($u[$c] ?? '')?></a><?php else: ?><?=htmlspecialchars($u[$c] ?? '')?><?php endif; ?></td>
                         <?php endforeach; ?>
                         <td class="p-2 flex gap-1 flex-wrap">
                             <!-- Ban / Unban -->
-                            <form method="post" action="admin_users_action.php" onsubmit="return confirm('Ban / Unban user?');">
+                            <?php if (in_array('is_banned', $cols, true)): ?>
+                            <form method="post" action="admin_users_action.php" onsubmit="return confirm('Hesap durumunu değiştirmek istiyor musun?');">
                                 <input type="hidden" name="csrf" value="<?=csrf_token()?>">
                                 <input type="hidden" name="user_id" value="<?=htmlspecialchars($u['id'])?>">
                                 <input type="hidden" name="action" value="<?=empty($u['is_banned']) ? 'ban' : 'unban'?>">
                                 <button class="px-2 py-1 <?=empty($u['is_banned']) ? 'bg-red-500 text-white' : 'bg-green-500 text-white'?> rounded text-sm">
-                                    <?=empty($u['is_banned']) ? 'Ban' : 'Unban'?>
+                                    <?=empty($u['is_banned']) ? 'Engelle' : 'Engeli kaldır'?>
                                 </button>
                             </form>
-                            <!-- Warn -->
-                            <button onclick="openWarn(<?=json_encode($u['id'])?>, <?=json_encode($u['username'])?>)" class="px-2 py-1 bg-amber-400 rounded text-sm">Warn</button>
-                            <!-- Badges -->
-                            <button onclick="openBadges(<?=json_encode($u['id'])?>)" class="px-2 py-1 bg-blue-200 rounded text-sm">Badges</button>
+                            <?php endif; ?>
+                            <button onclick="openWarn(<?=json_encode($u['id'])?>, <?=json_encode($u['username'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP)?>)" class="px-2 py-1 bg-amber-400 rounded text-sm">Uyar</button>
+                            <button onclick="openBadges(<?=json_encode($u['id'])?>)" class="px-2 py-1 bg-blue-200 rounded text-sm">Rozetler</button>
                         </td>
                     </tr>
                 <?php endforeach; ?>
+                <?php if ($users === []): ?><tr><td class="p-4 text-center text-slate-500" colspan="<?= count($cols) + 1 ?>">Kullanıcı bulunamadı.</td></tr><?php endif; ?>
             </tbody>
         </table>
     </div>
 
     <div class="mt-4 flex justify-center gap-2">
-        <?php for($i=1;$i<=$totalPages;$i++): ?>
+        <?php for($i=max(1, $page-2);$i<=min($totalPages, $page+2);$i++): ?>
             <a href="?p=<?=$i?>&q=<?=urlencode($search)?>" class="px-3 py-1 rounded <?= $i==$page ? 'bg-blue-600 text-white' : 'bg-slate-100' ?>"><?= $i ?></a>
         <?php endfor; ?>
     </div>
@@ -142,11 +150,23 @@ function openBadges(userId){
         .then(res => res.json())
         .then(data => {
             const list = document.getElementById('badgeList');
+            list.replaceChildren();
             if(data.length === 0){
-                list.innerHTML = '<p>No badges.</p>';
+                const empty = document.createElement('p');
+                empty.textContent = 'Rozet bulunamadı.';
+                list.appendChild(empty);
             } else {
-                list.innerHTML = '<ul>'+data.map(b=>'• '+b.badge_id+' (Awarded: '+b.awarded_at+', Unlocked: '+b.unlocked_at+')').join('<br>')+'</ul>';
+                const ul = document.createElement('ul');
+                data.forEach(badge => {
+                    const item = document.createElement('li');
+                    item.textContent = 'Rozet #' + badge.badge_id + ' · Verilme: ' + (badge.awarded_at || '—') + ' · Açılma: ' + (badge.unlocked_at || '—');
+                    ul.appendChild(item);
+                });
+                list.appendChild(ul);
             }
+        })
+        .catch(() => {
+            document.getElementById('badgeList').textContent = 'Rozetler yüklenemedi.';
         });
     document.getElementById('badgesModal').classList.remove('hidden');
     document.getElementById('badgesModal').classList.add('flex');

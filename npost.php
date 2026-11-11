@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/includes/content_moderation.php';
+
 // Uyarı Fonksiyonu
 if (!function_exists('warnUser')) {
     function warnUser($pdo, $user_id, $reason) {
@@ -31,7 +33,7 @@ if (!function_exists('normalizeContent')) {
     }
 }
 
-$postMessage = null; 
+$postMessage = null;
 
 // Sadece Text (Onep) Post işlemi bu dosyada işleniyor
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title']) && $is_logged_in) {
@@ -39,8 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title']) && $is_logge
     $description = trim($_POST['description'] ?? '');
     $anonymous = isset($_POST['anonymous']) ? 1 : 0;
     $user_id = $_SESSION['user_id'];
-    
-    $cooldown_seconds = 13; 
+
+    $cooldown_seconds = 13;
 
     $stmt = $pdo->prepare("SELECT created_at FROM topics WHERE created_by = ? ORDER BY created_at DESC LIMIT 1");
     $stmt->execute([$user_id]);
@@ -65,8 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title']) && $is_logge
             $postMessage = ["type" => "error", "text" => "Başlık boş bırakılamaz!"];
         } else {
             $forbidden_terms = [
-                'usame bin ladin', 'osama bin laden', 'bombalı saldırı', 'intihar saldırısı', 
-                'deprem sakası', 'sel felaketi', 'irkci', 'nefret soylemi', 'homofobi', 
+                'usame bin ladin', 'osama bin laden', 'bombalı saldırı', 'intihar saldırısı',
+                'deprem sakası', 'sel felaketi', 'irkci', 'nefret soylemi', 'homofobi',
                 'transfobi', 'alevi dusmanligi', 'kurt dusmanligi', 'yahudi dusmanligi'
             ];
 
@@ -80,12 +82,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title']) && $is_logge
                 }
             }
 
+            if (!$matched_term) {
+                $matched_term = dcFindProhibitedContent($title . ' ' . $description);
+            }
+
             if ($matched_term) {
                 warnUser($pdo, $user_id, "Uygunsuz içerik tespiti: {$matched_term}");
-                
+
                 $stmt = $pdo->prepare("INSERT INTO moderation_logs (user_id, reason, created_at) VALUES (?, ?, NOW())");
                 $stmt->execute([$user_id, "Filtreye takılan kelime: $matched_term"]);
-                
+
                 $postMessage = ["type" => "error", "text" => "Paylaşım topluluk kurallarına aykırı olduğu için engellendi 🚫"];
             } else {
                 $stmt = $pdo->prepare("INSERT INTO topics (title, description, anonymous, created_by, created_at) VALUES (?, ?, ?, ?, NOW())");
@@ -93,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title']) && $is_logge
 
                 $stmt = $pdo->prepare("INSERT INTO notifications (user_id, message, created_at) VALUES (?, ?, NOW())");
                 $stmt->execute([$user_id, "Yeni Onep'in başarıyla paylaşıldı! 🎉"]);
-                
+
                 $postMessage = ["type" => "success", "text" => "Harika! Onep başarıyla oluşturuldu 🚀"];
             }
         }

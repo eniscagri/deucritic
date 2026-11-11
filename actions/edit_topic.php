@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/config.php';
 require_once '../includes/functions.php';
+require_once __DIR__ . '/../includes/content_moderation.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../login.php');
@@ -33,7 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $description = trim($_POST['description']);
 
         // Hem başlık hem de karakter sınırını arka planda da doğruluyoruz
-        if (!$title) {
+        if (dcFindProhibitedContent($title . ' ' . $description) !== null) {
+            $error = 'Başlık ve açıklama küfür, hakaret veya +18 içerik içeremez.';
+        } elseif (!$title) {
             $error = 'Başlık boş olamaz.';
         } elseif (mb_strlen($description) > 2000) {
             $error = 'Açıklama 2000 karakterden uzun olamaz.';
@@ -41,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $stmt = $pdo->prepare("UPDATE topics SET title=?, description=? WHERE id=? AND created_by=?");
                 $stmt->execute([$title, $description, $topic_id, $user_id]);
-                
+
                 $success = 'Gönderin başarıyla güncellendi. Yönlendiriliyorsun...';
 
                 // Güncel verileri anında yansıt
@@ -92,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="min-h-screen flex items-center justify-center p-4">
 
 <div class="max-w-2xl w-full bg-white p-6 md:p-8 rounded-2xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.1)] border border-gray-100 fade-in">
-    
+
     <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-6">
         <h2 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2">
             <i class="fa-solid fa-pen-to-square text-primary"></i> Gönderiyi Düzenle
@@ -108,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p><?= e($error) ?></p>
         </div>
     <?php endif; ?>
-    
+
     <?php if ($success): ?>
         <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-xl mb-6 flex items-start gap-3 shadow-sm">
             <i class="fa-solid fa-circle-check mt-1 text-green-500 text-lg"></i>
@@ -142,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     class="w-full bg-[#f0f2f5] border border-transparent rounded-xl px-4 py-3 pb-8 text-gray-800 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all resize-none min-h-[180px] shadow-inner"
                     placeholder="Gönderi içeriğini buraya yaz..."
                     required><?= e($topic['description']) ?></textarea>
-                
+
                 <div class="absolute bottom-3 right-3 bg-white/80 backdrop-blur-sm px-2 py-1 rounded shadow-sm border border-gray-100 pointer-events-none transition-opacity opacity-70 group-focus-within:opacity-100">
                     <p class="text-[11px] font-bold text-gray-500 transition-colors" id="charCountText">
                         <span id="charCount">0</span>/2000
@@ -174,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const updateCounter = () => {
             const len = desc.value.length;
             counter.textContent = len;
-            
+
             // Kullanıcı sınıra (2000) yaklaşırsa (son 100 karakter kala) rengi kırmızı yap
             if (len > 1900) {
                 charCountText.classList.remove('text-gray-500');
@@ -186,8 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         // Sayfa yüklendiğinde mevcut metin uzunluğunu hesapla
-        updateCounter(); 
-        
+        updateCounter();
+
         // Kullanıcı her tuşa bastığında sayacı güncelle
         desc.addEventListener('input', updateCounter);
     }

@@ -1,6 +1,7 @@
 
 <?php
 require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/content_moderation.php';
 header('Content-Type: application/json; charset=utf-8');
 
 function is_logged_in() {
@@ -26,6 +27,13 @@ $anonymous = isset($_POST['anonymous']) && $_POST['anonymous']=='1' ? 1 : 0;
 
 if($topic_id <= 0 || mb_strlen($content) < 5){
     echo json_encode(['success'=>false,'error'=>'Eksik veya kısa içerik']);
+    exit;
+}
+
+$moderationCategory = dcFindProhibitedContent($content);
+if ($moderationCategory !== null) {
+    http_response_code(422);
+    echo json_encode(['success' => false, 'error' => 'Paylaşım küfür, hakaret veya +18 içerik içeremez.']);
     exit;
 }
 

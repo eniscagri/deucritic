@@ -3,6 +3,7 @@ require_once __DIR__ . '/includes/i18n.php';
 
 require_once 'includes/config.php';
 require_once 'includes/functions.php';
+require_once __DIR__ . '/includes/content_moderation.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
@@ -10,22 +11,39 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $logged_user_id = $_SESSION['user_id'];
-$username_param = $_GET['user'] ?? null;
+$profile_param = $_GET['user'] ?? null;
 
 try {
-    if ($username_param) {
-        $stmt = $pdo->prepare("SELECT id, username, email, recovery_email, school, grade_level, profile_photo, cover_photo, bio FROM users WHERE username=?");
-        $stmt->execute([$username_param]);
+    if ($profile_param !== null && $profile_param !== '') {
+        if (ctype_digit((string) $profile_param)) {
+            $stmt = $pdo->prepare("SELECT id, username, email, recovery_email, school, grade_level, profile_photo, cover_photo, bio FROM users WHERE id=?");
+        } else {
+            $stmt = $pdo->prepare("SELECT id, username, email, recovery_email, school, grade_level, profile_photo, cover_photo, bio FROM users WHERE username=?");
+        }
+        $stmt->execute([$profile_param]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        $is_own_profile = $user['id'] == $logged_user_id;
     } else {
         $stmt = $pdo->prepare("SELECT id, username, email, recovery_email, school, grade_level, profile_photo, cover_photo, bio FROM users WHERE id=?");
         $stmt->execute([$logged_user_id]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        $is_own_profile = true;
     }
 
     if (!$user) die('Kullanıcı bulunamadı.');
+    $is_own_profile = $user['id'] == $logged_user_id;
+
+    $blockedByMe = false;
+    $blockedMe = false;
+    if (!$is_own_profile) {
+        $stmt = $pdo->prepare('SELECT blocker_id FROM user_blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)');
+        $stmt->execute([$logged_user_id, $user['id'], $user['id'], $logged_user_id]);
+        foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $blockerId) {
+            if ((int) $blockerId === (int) $logged_user_id) {
+                $blockedByMe = true;
+            } else {
+                $blockedMe = true;
+            }
+        }
+    }
 } catch (PDOException $e) {
     die("Veritabanı hatası: " . e($e->getMessage()));
 }
@@ -49,26 +67,26 @@ $form = [
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_own_profile) {
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         $error_msg = 'Geçersiz istek (CSRF doğrulanamadı)!';
-    } 
+    }
     elseif (isset($_POST['update_cover'])) {
         if (isset($_FILES['cover_photo']) && $_FILES['cover_photo']['error'] === UPLOAD_ERR_OK) {
             $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            
+
             if (in_array($_FILES['cover_photo']['type'], $allowed_types)) {
                 $ext = pathinfo($_FILES['cover_photo']['name'], PATHINFO_EXTENSION);
                 $filename = 'cover_' . $logged_user_id . '_' . time() . '.' . $ext;
-                
+
                 $upload_dir = __DIR__ . '/uploads/cover_photos/';
                 if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
-                
+
                 $target = $upload_dir . $filename;
                 if (move_uploaded_file($_FILES['cover_photo']['tmp_name'], $target)) {
                     $cover_photo_path = 'uploads/cover_photos/' . $filename;
-                    
+
                     try {
                         $stmt = $pdo->prepare("UPDATE users SET cover_photo=? WHERE id=?");
                         $stmt->execute([$cover_photo_path, $logged_user_id]);
-                        $user['cover_photo'] = $cover_photo_path; 
+                        $user['cover_photo'] = $cover_photo_path;
                         $success_msg = 'Kapak fotoğrafın başarıyla güncellendi!';
                     } catch (PDOException $e) {
                         $error_msg = 'Veritabanı hatası: ' . e($e->getMessage());
@@ -82,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_own_profile) {
         } else {
             $error_msg = 'Lütfen geçerli bir dosya seçin.';
         }
-    } 
+    }
     else {
         $username = trim($_POST['username'] ?? '');
         $email = trim($_POST['email'] ?? '');
@@ -94,15 +112,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_own_profile) {
         $form = ['username' => $username, 'email' => $email, 'recovery_email' => $recovery_email, 'school' => $school, 'grade_level' => $grade, 'bio' => $bio];
         $profile_photo = $user['profile_photo'];
 
-        if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
+        if (dcFindProhibitedContent($bio) !== null) {
+            $error_msg = 'Biyografi küfür, hakaret veya +18 içerik içeremez.';
+        }
+
+        if ($error_msg === '' && isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
             $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
             if (in_array($_FILES['profile_photo']['type'], $allowed_types)) {
                 $ext = pathinfo($_FILES['profile_photo']['name'], PATHINFO_EXTENSION);
                 $filename = 'profile_' . $logged_user_id . '_' . time() . '.' . $ext;
                 $upload_dir = __DIR__ . '/uploads/profile_photos/';
-                
+
                 if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
-                
+
                 $target = $upload_dir . $filename;
                 if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $target)) {
                     $profile_photo = 'uploads/profile_photos/' . $filename;
@@ -114,25 +136,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_own_profile) {
             }
         }
 
-        if (!$username || !$email) {
+        if ($error_msg === '' && (!$username || !$email)) {
             $error_msg = 'Kullanıcı adı ve e-posta boş olamaz.';
-        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        } elseif ($error_msg === '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error_msg = 'Geçerli bir e-posta giriniz.';
-        } else {
+        } elseif ($error_msg === '') {
             $stmt = $pdo->prepare("SELECT id FROM users WHERE (LOWER(email)=LOWER(?) OR LOWER(username)=LOWER(?)) AND id!=?");
             $stmt->execute([$email, $username, $logged_user_id]);
-            
+
             if ($stmt->rowCount() > 0) {
                 $error_msg = 'Bu kullanıcı adı veya e-posta başka bir kullanıcı tarafından kullanılıyor.';
             } else {
                 try {
                     $stmt = $pdo->prepare("UPDATE users SET username=?, email=?, recovery_email=?, school=?, grade_level=?, profile_photo=?, bio=? WHERE id=?");
                     $stmt->execute([$username, $email, $recovery_email, $school, $grade, $profile_photo, $bio, $logged_user_id]);
-                    
+
                     $success_msg = 'Profilin başarıyla güncellendi.';
                     $_SESSION['username'] = $username;
                     $_SESSION['email'] = $email;
-                    
+
                     $user = array_merge($user, $form, ['profile_photo' => $profile_photo]);
                 } catch (PDOException $e) {
                     $error_msg = 'Bir hata oluştu: ' . e($e->getMessage());
@@ -165,6 +187,11 @@ $stmt = $pdo->prepare("SELECT id, title, description, created_at, anonymous FROM
 $stmt->execute([$user['id']]);
 $topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+if ($blockedByMe || $blockedMe) {
+    $topics = [];
+    $entries = [];
+}
+
 $autoFollowId = 6;
 if ($logged_user_id != $autoFollowId) {
     $stmt = $pdo->prepare("SELECT id FROM followers WHERE follower_id=? AND followed_id=?");
@@ -182,7 +209,7 @@ function getProfilePhotoUrl($photo_path, $default_avatar = 'gorsel/default-avata
 
 function getCoverPhotoUrl($photo_path) {
     if (!empty($photo_path) && file_exists(__DIR__ . '/' . $photo_path)) return $photo_path;
-    return ''; 
+    return '';
 }
 ?>
 
@@ -215,8 +242,8 @@ function getCoverPhotoUrl($photo_path) {
         /* Kapak fotoğrafı yükleme butonu efekti */
         .cover-overlay { background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%); }
     </style>
-    
-    
+
+
     <!--profil kapak--->
     <script>
 function openActionMenu(event, menuId) {
@@ -229,10 +256,10 @@ function openActionMenu(event, menuId) {
 function viewFullImage(imgId) {
     const src = document.getElementById(imgId).src;
     if(!src) return;
-    
+
     const lightbox = document.getElementById('imageLightbox');
     const lbImg = document.getElementById('lightboxImg');
-    
+
     lbImg.src = src;
     lightbox.classList.remove('hidden');
     setTimeout(() => lbImg.classList.remove('scale-95'), 10);
@@ -279,7 +306,7 @@ document.addEventListener('keydown', (e) => {
 
 
 <main class="container mx-auto mt-6 px-3 sm:px-4 max-w-5xl mb-12">
-    
+
     <?php if ($error_msg): ?>
         <div class="auto-close-alert bg-rose-50 border border-rose-200 text-rose-600 px-4 py-3 rounded-xl mb-6 shadow-sm flex items-center gap-3 animate-fade-in fade-in">
             <i class="fa-solid fa-circle-exclamation"></i> <p class="font-semibold text-sm"><?= e($error_msg) ?></p>
@@ -296,13 +323,13 @@ document.addEventListener('keydown', (e) => {
 </div>
 
 <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden mb-8 relative">
-    
+
     <div class="relative w-full h-48 sm:h-64 md:h-80 bg-gradient-to-br from-primary/20 via-cyan-300/20 to-secondary/20 group overflow-hidden">
         <?php $mini_cover = getCoverPhotoUrl($user['cover_photo'] ?? ''); ?>
-        <img id="cover-preview" src="<?= $mini_cover ? e($mini_cover) : '' ?>" 
+        <img id="cover-preview" src="<?= $mini_cover ? e($mini_cover) : '' ?>"
              class="<?= $mini_cover ? '' : 'hidden' ?> w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 cursor-pointer"
              onclick="openActionMenu(event, 'coverActions')">
-        
+
         <?php if (!$mini_cover && $is_own_profile): ?>
             <div class="absolute inset-0 flex items-center justify-center cursor-pointer" onclick="document.getElementById('coverInput').click()">
                 <div class="bg-white/50 backdrop-blur-md px-4 py-2 rounded-full text-sm font-bold text-slate-600 border border-white/30">
@@ -330,11 +357,11 @@ document.addEventListener('keydown', (e) => {
     </div>
 
     <div class="relative px-6 sm:px-12 pb-10 flex flex-col sm:flex-row sm:items-end gap-5 sm:gap-8 -mt-14 sm:-mt-20">
-        
+
         <div class="relative w-28 h-28 sm:w-40 sm:h-40 flex-shrink-0 z-10 group">
             <div class="w-full h-full rounded-[2.5rem] border-[6px] border-white shadow-2xl bg-slate-50 overflow-hidden cursor-pointer ring-1 ring-slate-100"
                  onclick="openActionMenu(event, 'avatarActions')">
-                <img id="avatar-preview" src="<?= e(getProfilePhotoUrl($user['profile_photo'])) ?>" 
+                <img id="avatar-preview" src="<?= e(getProfilePhotoUrl($user['profile_photo'])) ?>"
                      class="w-full h-full object-cover transition-all duration-500 group-hover:brightness-90">
             </div>
 
@@ -365,7 +392,7 @@ document.addEventListener('keydown', (e) => {
                     <span data-dc-user-content><?= e($user['bio']) ?></span>
                 </p>
             <?php endif; ?>
-            
+
             <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
                 <div class="flex items-center gap-2 text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
                     <i class="fa-solid fa-graduation-cap text-primary"></i>
@@ -384,10 +411,35 @@ document.addEventListener('keydown', (e) => {
                     <i class="fa-solid fa-sliders text-primary"></i> Profili Düzenle
                 </button>
             <?php else: ?>
-                <button id="followBtn" data-user="<?= $user['id'] ?>" data-following="<?= $is_following ? '1' : '0' ?>"
-                        class="flex-1 sm:flex-none px-8 py-3.5 rounded-2xl font-black transition-all shadow-md flex items-center justify-center gap-3 transform active:scale-95 <?= $is_following ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-slate-900 text-white hover:bg-slate-800' ?>">
-                    <?= $is_following ? '<i class="fa-solid fa-user-minus"></i> Takibi Bırak' : '<i class="fa-solid fa-user-plus"></i> Takip Et' ?>
-                </button>
+                <?php if ($blockedByMe): ?>
+                    <form method="post" action="block_user.php" class="flex-1 sm:flex-none">
+                        <input type="hidden" name="csrf_token" value="<?= e($_SESSION['csrf_token']) ?>">
+                        <input type="hidden" name="user_id" value="<?= (int) $user['id'] ?>">
+                        <button type="submit" name="action" value="unblock" class="w-full px-6 py-3.5 rounded-2xl font-black bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-user-check" aria-hidden="true"></i> Engeli kaldır
+                        </button>
+                    </form>
+                <?php elseif ($blockedMe): ?>
+                    <form method="post" action="block_user.php" onsubmit="return confirm('Bu kullanıcıyı da engellemek istiyor musun?')" class="flex-1 sm:flex-none">
+                        <input type="hidden" name="csrf_token" value="<?= e($_SESSION['csrf_token']) ?>">
+                        <input type="hidden" name="user_id" value="<?= (int) $user['id'] ?>">
+                        <button type="submit" name="action" value="block" class="w-full px-5 py-3.5 rounded-2xl font-bold bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-ban" aria-hidden="true"></i> Engelle
+                        </button>
+                    </form>
+                <?php else: ?>
+                    <button id="followBtn" data-user="<?= $user['id'] ?>" data-following="<?= $is_following ? '1' : '0' ?>"
+                            class="flex-1 sm:flex-none px-6 py-3.5 rounded-2xl font-black transition-all shadow-md flex items-center justify-center gap-3 transform active:scale-95 <?= $is_following ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-slate-900 text-white hover:bg-slate-800' ?>">
+                        <?= $is_following ? '<i class="fa-solid fa-user-minus"></i> Takibi Bırak' : '<i class="fa-solid fa-user-plus"></i> Takip Et' ?>
+                    </button>
+                    <form method="post" action="block_user.php" onsubmit="return confirm('Bu kullanıcıyı engellemek ve sohbeti gizlemek istiyor musun?')" class="flex-1 sm:flex-none">
+                        <input type="hidden" name="csrf_token" value="<?= e($_SESSION['csrf_token']) ?>">
+                        <input type="hidden" name="user_id" value="<?= (int) $user['id'] ?>">
+                        <button type="submit" name="action" value="block" class="w-full px-5 py-3.5 rounded-2xl font-bold bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-ban" aria-hidden="true"></i><span class="hidden sm:inline">Engelle</span>
+                        </button>
+                    </form>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
@@ -395,22 +447,22 @@ document.addEventListener('keydown', (e) => {
 
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
+
         <div class="lg:col-span-4 space-y-6">
-            
+
             <?php if ($is_own_profile): ?>
                 <div id="editProfileSection" class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-slate-100 hidden fade-in relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
                     <h3 class="font-extrabold text-lg mb-5 text-dark">Ayarlar</h3>
-                    
+
                     <form method="POST" enctype="multipart/form-data" class="space-y-4">
                         <input type="hidden" name="csrf_token" value="<?= e($_SESSION['csrf_token']) ?>">
-                        
+
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Takma Ad</label>
                             <input type="text" name="username" value="<?= e($form['username']) ?>" required class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all text-sm font-medium">
                         </div>
-                        
+
                         <div class="opacity-70 cursor-not-allowed">
                             <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider flex items-center gap-1">Okul E-postası <i class="fa-solid fa-lock text-[10px]"></i></label>
                             <input type="email" name="email" value="<?= e($form['email']) ?>" readonly class="w-full bg-slate-100 border border-transparent p-3 rounded-xl outline-none text-sm font-medium cursor-not-allowed">
@@ -450,7 +502,7 @@ document.addEventListener('keydown', (e) => {
                                 <i class="fa-solid fa-image"></i> Yeni Avatar Seç
                                 <input type="file" name="profile_photo" id="photoInput" accept="image/jpeg, image/png, image/webp" class="hidden">
                             </label>
-                            
+
                             <div class="flex gap-2">
                                 <button type="button" id="cancelEditBtn" class="w-1/3 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-200 transition">İptal</button>
                                 <button type="submit" class="w-2/3 py-3 bg-dark text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition shadow-md">Değişiklikleri Kaydet</button>
@@ -488,10 +540,10 @@ document.addEventListener('keydown', (e) => {
         <?php else: ?>
             <?php foreach($badges as $badge): ?>
                 <a href="badges.php" class="group relative flex flex-col items-center">
-                    
+
                     <div class="relative w-14 h-14 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-1">
                         <div class="absolute inset-0 bg-primary/20 blur-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        
+
                         <?php if(!empty($badge['icon'])): ?>
                             <img src="<?= e($badge['icon']) ?>" alt="<?= e($badge['name']) ?>" class="w-full h-full object-contain relative z-10 drop-shadow-sm group-hover:drop-shadow-lg transition-all">
                         <?php else: ?>
@@ -500,7 +552,7 @@ document.addEventListener('keydown', (e) => {
                             </div>
                         <?php endif; ?>
                     </div>
-                    
+
                     <div class="absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[100] pointer-events-none w-max max-w-[180px]">
                         <div class="bg-slate-900/95 backdrop-blur-md text-white px-3 py-2.5 rounded-xl shadow-2xl text-center border border-white/10">
                             <p class="text-[11px] font-black leading-tight text-amber-400 mb-1"><?= e($badge['name']) ?></p>
@@ -521,7 +573,7 @@ document.addEventListener('keydown', (e) => {
 
         <div class="lg:col-span-8">
             <div class="bg-white rounded-[1.5rem] shadow-sm border border-slate-100 overflow-hidden">
-                
+
                 <div class="p-2 border-b border-slate-100 bg-slate-50/50">
                     <div class="flex bg-slate-100/50 p-1 rounded-xl">
                         <button class="tab-btn active flex-1 py-2.5 text-sm font-bold rounded-lg transition-all" data-target="posts">
@@ -557,7 +609,7 @@ document.addEventListener('keydown', (e) => {
                                             </span>
                                         </div>
                                     </div>
-                                    
+
                                     <?php if ($is_own_profile): ?>
                                     <div class="relative group">
                                         <button class="text-slate-400 hover:text-dark p-2 transition">
@@ -572,7 +624,7 @@ document.addEventListener('keydown', (e) => {
                                     </div>
                                     <?php endif; ?>
                                 </div>
-                                
+
                                 <div class="mt-2 text-dark">
                                     <h5 class="font-extrabold text-base mb-1.5"><a data-dc-user-content href="topic.php?id=<?= e($topic['id']) ?>" class="hover:text-primary transition-colors"><?= e($topic['title']) ?></a></h5>
                                     <p data-dc-user-content class="text-sm font-medium leading-relaxed text-slate-600 break-words">
@@ -582,7 +634,7 @@ document.addEventListener('keydown', (e) => {
                                         <a href="topic.php?id=<?= e($topic['id']) ?>" class="text-primary text-sm font-bold hover:underline mt-2 inline-block">Devamını Oku</a>
                                     <?php endif; ?>
                                 </div>
-                                
+
                                 <div class="mt-5 flex gap-4 text-xs font-bold text-slate-400">
                                     <a href="topic.php?id=<?= e($topic['id']) ?>" class="hover:bg-slate-100 hover:text-dark px-3 py-2 rounded-lg transition flex items-center gap-2"><i class="fa-regular fa-comment text-base"></i> Yorum Yap</a>
                                 </div>
@@ -640,7 +692,7 @@ document.addEventListener('keydown', (e) => {
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     // UYARI MESAJLARI OTOMATİK KAPANMA
     const alerts = document.querySelectorAll('.auto-close-alert');
     if (alerts.length > 0) {
@@ -649,7 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert.style.opacity = '0';
                 setTimeout(() => alert.remove(), 400);
             });
-        }, 4000); 
+        }, 4000);
     }
 
     // TAB KONTROLÜ
@@ -702,7 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         preview.classList.remove('hidden');
                         if(formId) {
                             preview.style.opacity = '0.5';
-                            document.getElementById(formId).submit(); 
+                            document.getElementById(formId).submit();
                         }
                     }
                     reader.readAsDataURL(file);
@@ -721,12 +773,12 @@ document.addEventListener('DOMContentLoaded', () => {
             followBtn.style.opacity = '0.7';
 
             const userId = followBtn.getAttribute('data-user');
-            
+
             fetch('actions/follow_toggle.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    target_id: userId, 
+                    target_id: userId,
                     csrf_token: '<?= $_SESSION['csrf_token'] ?>'
                 })
             })

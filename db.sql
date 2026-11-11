@@ -12,6 +12,15 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Engellenen kullanıcılar
+CREATE TABLE user_blocks (
+    blocker_id INT NOT NULL,
+    blocked_id INT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (blocker_id, blocked_id),
+    KEY idx_user_blocks_blocked_id (blocked_id)
+);
+
 -- Başlıklar
 CREATE TABLE topics (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -41,4 +50,19 @@ CREATE TABLE reports (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (entry_id) REFERENCES entries(id),
     FOREIGN KEY (reported_by) REFERENCES users(id)
+);
+
+-- Login IP and device metadata (IP does not provide precise physical location).
+CREATE TABLE user_ip_logs (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    ip VARCHAR(45) DEFAULT NULL,
+    user_agent VARCHAR(512) NOT NULL DEFAULT '',
+    country VARCHAR(100) DEFAULT NULL,
+    city VARCHAR(100) DEFAULT NULL,
+    isp VARCHAR(190) DEFAULT NULL,
+    is_vpn TINYINT(1) NOT NULL DEFAULT 0,
+    logged_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_user_ip_logs_user_date (user_id, logged_at),
+    KEY idx_user_ip_logs_ip_date (ip, logged_at)
 );

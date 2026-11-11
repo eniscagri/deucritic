@@ -1,133 +1,144 @@
 <?php
-// admin_init.php
-// Ortak başlatıcı: oturum, PDO, CSRF, yetki ve IP-lookup helper'ları.
+require_once __DIR__ . '/../includes/config.php';
 
-session_start();
 header('Content-Type: text/html; charset=utf-8');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: no-referrer');
+header('X-Robots-Tag: noindex, nofollow, noarchive');
 
-// === CONFIG: burayı kendi değerlerinle değiştir ===
-$db_host = 'localhost';
-$db_name = 'deucditiccom_deucritic';
-$db_user = 'deucditiccom_eniscagri';
-$db_pass = 'Enis07654607';
-
-// Admin şifresi (örnek). Production: bunu sabit yazma; env/deployment ile yönet.
-if (!defined('ADMIN_PASSWORD_HASH')) {
-    define('ADMIN_PASSWORD_HASH', password_hash('admin123', PASSWORD_DEFAULT));
+if (empty($_SESSION['admin_csrf'])) {
+    $_SESSION['admin_csrf'] = bin2hex(random_bytes(32));
 }
 
-// === PDO ---
-try {
-    $pdo = new PDO(
-        "mysql:host=$db_host;dbname=$db_name;charset=utf8mb4",
-        $db_user,
-        $db_pass,
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
-    );
-} catch (PDOException $e) {
-    // Prod: kullanıcıya genel mesaj ver, logla
-    die("DB Connection failed: " . $e->getMessage());
+function admin_csrf_token(): string
+{
+    return $_SESSION['admin_csrf'];
 }
 
-// === CSRF ===
-if (!isset($_SESSION['admin_csrf'])) {
-    $_SESSION['admin_csrf'] = bin2hex(random_bytes(24));
+function admin_csrf_ok($token): bool
+{
+    return is_string($token)
+        && isset($_SESSION['admin_csrf'])
+        && hash_equals($_SESSION['admin_csrf'], $token);
 }
-function csrf_token() { return $_SESSION['admin_csrf']; }
-function csrf_ok($token) { return isset($token, $_SESSION['admin_csrf']) && hash_equals($_SESSION['admin_csrf'], $token); }
 
-// === require admin ===
-function require_admin() {
-    if (empty($_SESSION['admin_logged'])) {
-        header('Location: admin_login.php');
-        exit;
+function csrf_token(): string
+{
+    return admin_csrf_token();
+}
+
+function csrf_ok($token): bool
+{
+    return admin_csrf_ok($token);
+}
+
+function admin_settings(): array
+{
+    static $settings = null;
+    if ($settings === null) {
+        $settings = $GLOBALS['deucriticPrivateConfig'] ?? [];
+        $envHash = getenv('DEUCRITIC_ADMIN_PASSWORD_HASH');
+        if ($envHash !== false && $envHash !== '') {
+            $settings['admin_password_hash'] = $envHash;
+        }
+        $envIps = getenv('DEUCRITIC_ADMIN_ALLOWED_IPS');
+        if ($envIps !== false && $envIps !== '') {
+            $settings['admin_allowed_ips'] = $envIps;
+        }
     }
+    return is_array($settings) ? $settings : [];
 }
 
-// === simple file cache for IP lookups ===
-// cache dir (ensure writable)
-$IP_CACHE_DIR = __DIR__ . '/cache_ip';
-if (!is_dir($IP_CACHE_DIR)) mkdir($IP_CACHE_DIR, 0755, true);
+function admin_password_hash(): string
+{
+    return trim((string) (admin_settings()['admin_password_hash'] ?? ''));
+}
 
-// get ip info with cache. returns associative array: country, city, isp, lat, lon, proxy/hosting flags
-function ip_lookup_cached(string $ip, int $ttl_seconds = 86400) {
-    global $IP_CACHE_DIR;
-    $safe = preg_replace('/[^a-z0-9\._-]/i','', $ip);
-    $file = "$IP_CACHE_DIR/$safe.json";
+function admin_allowed_ips(): array
+{
+    $value = admin_settings()['admin_allowed_ips'] ?? [];
+    if (is_string($value)) {
+        $value = explode(',', $value);
+    }
+    if (!is_array($value)) {
+        return [];
+    }
 
-    if (file_exists($file)) {
-        $age = time() - filemtime($file);
-        if ($age < $ttl_seconds) {
-            $json = @file_get_contents($file);
-            if ($json) {
-                $data = json_decode($json, true);
-                if ($data) return $data;
-            }
+    return array_values(array_filter(array_map('trim', $value)));
+}
+
+function admin_request_ip_allowed(): bool
+{
+    $allowedIps = admin_allowed_ips();
+    if ($allowedIps === []) {
+        return true;
+    }
+
+    $remoteIp = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+    if (filter_var($remoteIp, FILTER_VALIDATE_IP) === false) {
+        return false;
+    }
+
+    foreach ($allowedIps as $allowedIp) {
+        if (filter_var($allowedIp, FILTER_VALIDATE_IP) !== false && hash_equals($allowedIp, $remoteIp)) {
+            return true;
         }
     }
 
-    // ip-api.com free endpoint
-    $url = "http://ip-api.com/json/".urlencode($ip)."?fields=status,country,city,isp,lat,lon,proxy,hosting,query,message";
-    $opts = ['http' => ['timeout' => 5]];
-    $ctx = stream_context_create($opts);
-    $json = @file_get_contents($url, false, $ctx);
-    if (!$json) {
-        $data = ['status'=>'fail','message'=>'no-response'];
-    } else {
-        $data = json_decode($json, true);
-        if (!$data) $data = ['status'=>'fail','message'=>'json-error'];
-    }
-    // Cache the raw response
-    @file_put_contents($file, json_encode($data));
-    return $data;
+    return false;
 }
 
-// === check if ip is banned ===
-function ip_is_banned($pdo, $ip) {
-    $stmt = $pdo->prepare("SELECT 1 FROM banned_ips WHERE ip = :ip LIMIT 1");
-    $stmt->execute([':ip'=>$ip]);
-    return (bool)$stmt->fetchColumn();
+function require_admin(): void
+{
+    if (!admin_request_ip_allowed()) {
+        unset($_SESSION['admin_logged'], $_SESSION['admin_last_activity']);
+        http_response_code(403);
+        exit('Bu ağ adresinden yönetici paneline erişilemiyor.');
+    }
+
+    $lastActivity = (int) ($_SESSION['admin_last_activity'] ?? 0);
+    if (empty($_SESSION['admin_logged']) || $lastActivity < time() - 1800) {
+        unset($_SESSION['admin_logged'], $_SESSION['admin_last_activity']);
+        header('Location: admin_login.php');
+        exit;
+    }
+
+    $_SESSION['admin_last_activity'] = time();
 }
 
-// === log IP on successful login ===
-function log_user_ip($pdo, $user_id, $ip, $user_agent = '') {
-    // lookup
-    $info = ip_lookup_cached($ip);
-    $country = $info['country'] ?? null;
-    $city = $info['city'] ?? null;
-    $isp = $info['isp'] ?? null;
-    $lat = isset($info['lat']) ? $info['lat'] : null;
-    $lon = isset($info['lon']) ? $info['lon'] : null;
-    $is_vpn = (!empty($info['proxy']) || !empty($info['hosting'])) ? 1 : 0;
-
-    $stmt = $pdo->prepare("
-        INSERT INTO user_ip_logs (user_id, ip, country, city, isp, lat, lon, is_vpn)
-        VALUES (:uid,:ip,:country,:city,:isp,:lat,:lon,:is_vpn)
-    ");
-    $stmt->execute([
-        ':uid'=>$user_id,
-        ':ip'=>$ip,
-        ':country'=>$country,
-        ':city'=>$city,
-        ':isp'=>$isp,
-        ':lat'=>$lat,
-        ':lon'=>$lon,
-        ':is_vpn'=>$is_vpn
-    ]);
-
-    // update users.last_ip
-    $stmt2 = $pdo->prepare("UPDATE users SET last_ip = :ip, last_login = NOW() WHERE id = :uid");
-    $stmt2->execute([':ip'=>$ip, ':uid'=>$user_id]);
-
-    // device tracking
-    $device_hash = hash('sha256', ($user_agent ?? '') . '||' . $ip);
-    $stmt3 = $pdo->prepare("SELECT id FROM login_devices WHERE device_hash = :d AND user_id = :uid LIMIT 1");
-    $stmt3->execute([':d'=>$device_hash, ':uid'=>$user_id]);
-    if (!$stmt3->fetch()) {
-        $ins = $pdo->prepare("INSERT INTO login_devices (user_id, device_hash, ip, user_agent, is_suspicious) VALUES (:uid,:d,:ip,:ua,:is_suspicious)");
-        $ins->execute([':uid'=>$user_id, ':d'=>$device_hash, ':ip'=>$ip, ':ua'=>$user_agent, ':is_suspicious'=>$is_vpn]);
-    } else {
-        $upd = $pdo->prepare("UPDATE login_devices SET last_seen = NOW(), ip = :ip WHERE device_hash = :d AND user_id = :uid");
-        $upd->execute([':ip'=>$ip, ':d'=>$device_hash, ':uid'=>$user_id]);
+function admin_table_exists(PDO $pdo, string $table): bool
+{
+    static $cache = [];
+    if (!array_key_exists($table, $cache)) {
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?'
+        );
+        $stmt->execute([$table]);
+        $cache[$table] = (int) $stmt->fetchColumn() > 0;
     }
+    return $cache[$table];
+}
+
+function admin_column_exists(PDO $pdo, string $table, string $column): bool
+{
+    static $cache = [];
+    $key = $table . '.' . $column;
+    if (!array_key_exists($key, $cache)) {
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?'
+        );
+        $stmt->execute([$table, $column]);
+        $cache[$key] = (int) $stmt->fetchColumn() > 0;
+    }
+    return $cache[$key];
+}
+
+function admin_table_count(PDO $pdo, string $table): int
+{
+    if (!preg_match('/^[a-zA-Z0-9_]+$/', $table) || !admin_table_exists($pdo, $table)) {
+        return 0;
+    }
+    return (int) $pdo->query('SELECT COUNT(*) FROM `' . $table . '`')->fetchColumn();
 }

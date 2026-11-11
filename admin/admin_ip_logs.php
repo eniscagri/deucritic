@@ -2,32 +2,53 @@
 require_once 'admin_init.php';
 require_admin();
 
+if (!admin_table_exists($pdo, 'user_ip_logs')) {
+    http_response_code(404);
+    exit('IP oturum kayıtları bu veritabanında bulunmuyor.');
+}
+
 $page = max(1, (int)($_GET['p'] ?? 1));
 $perPage = 30;
-$offset = ($page-1)*$perPage;
 $search = trim($_GET['q'] ?? '');
 
 $params = [];
-$sql = "SELECT l.*, u.username, u.email FROM user_ip_logs l LEFT JOIN users u ON l.user_id = u.id";
+$countParams = [];
+$dateColumn = admin_column_exists($pdo, 'user_ip_logs', 'date') ? 'date' : (admin_column_exists($pdo, 'user_ip_logs', 'created_at') ? 'created_at' : (admin_column_exists($pdo, 'user_ip_logs', 'logged_at') ? 'logged_at' : 'id'));
+$where = '';
 if ($search !== '') {
-    $sql .= " WHERE u.username LIKE :s OR u.email LIKE :s OR l.ip LIKE :s";
-    $params[':s'] = "%$search%";
+    $where = " WHERE u.username LIKE :username OR u.email LIKE :email OR l.ip LIKE :ip";
+    $params = [
+        ':username' => "%$search%",
+        ':email' => "%$search%",
+        ':ip' => "%$search%",
+    ];
 }
-$sql .= " ORDER BY l.date DESC LIMIT :off, :pp";
+$countSql = "SELECT COUNT(*) FROM user_ip_logs l LEFT JOIN users u ON l.user_id = u.id";
+if ($search !== '') {
+    $countParams = $params;
+}
+$countSql .= $where;
+$countStmt = $pdo->prepare($countSql);
+$countStmt->execute($countParams);
+$total = (int)$countStmt->fetchColumn();
+$totalPages = max(1, (int) ceil($total / $perPage));
+$page = min($page, $totalPages);
+$offset = ($page - 1) * $perPage;
+
+$sql = "SELECT l.id, l.user_id, l.ip, " .
+    (admin_column_exists($pdo, 'user_ip_logs', 'country') ? 'l.country' : 'NULL AS country') . ", " .
+    (admin_column_exists($pdo, 'user_ip_logs', 'city') ? 'l.city' : 'NULL AS city') . ", " .
+    (admin_column_exists($pdo, 'user_ip_logs', 'isp') ? 'l.isp' : 'NULL AS isp') . ", " .
+    (admin_column_exists($pdo, 'user_ip_logs', 'is_vpn') ? 'l.is_vpn' : '0 AS is_vpn') . ", l.`$dateColumn` AS date
+    FROM user_ip_logs l LEFT JOIN users u ON l.user_id = u.id" . $where . " ORDER BY l.`$dateColumn` DESC LIMIT :off, :pp";
 $stmt = $pdo->prepare($sql);
-foreach ($params as $k=>$v) $stmt->bindValue($k, $v);
+foreach ($params as $key => $value) {
+    $stmt->bindValue($key, $value);
+}
 $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
 $stmt->bindValue(':pp', $perPage, PDO::PARAM_INT);
 $stmt->execute();
 $logs = $stmt->fetchAll();
-
-// count total (simple)
-$countSql = "SELECT COUNT(*) FROM user_ip_logs l LEFT JOIN users u ON l.user_id = u.id";
-if ($search !== '') $countSql .= " WHERE u.username LIKE :s OR u.email LIKE :s OR l.ip LIKE :s";
-$countStmt = $pdo->prepare($countSql);
-if ($search !== '') $countStmt->execute([':s'=>"%$search%"]); else $countStmt->execute();
-$total = (int)$countStmt->fetchColumn();
-$totalPages = (int)ceil($total / $perPage);
 ?>
 <!doctype html>
 <html>
@@ -41,7 +62,7 @@ $totalPages = (int)ceil($total / $perPage);
     <div class="text-xl font-bold">Admin — IP Logs</div>
     <div>
         <a href="index.php" class="px-3 py-1 bg-slate-100 rounded">Dashboard</a>
-        <a href="admin_logout.php" class="px-3 py-1 bg-red-500 text-white rounded">Logout</a>
+        <a href="logout.php" class="px-3 py-1 bg-red-500 text-white rounded">Oturumu kapat</a>
     </div>
 </header>
 
@@ -100,7 +121,7 @@ $totalPages = (int)ceil($total / $perPage);
         <div>Total: <?=$total?></div>
         <div class="flex gap-2">
             <?php if($page>1): ?><a href="?p=<?=$page-1?>&q=<?=urlencode($search)?>" class="px-3 py-1 bg-slate-200 rounded">Prev</a><?php endif;?>
-            <?php for($i=1;$i<=$totalPages;$i++): ?>
+            <?php for($i=max(1, $page-2);$i<=min($totalPages, $page+2);$i++): ?>
                 <a href="?p=<?=$i?>&q=<?=urlencode($search)?>" class="px-3 py-1 <?=($i==$page?'bg-blue-600 text-white':'bg-slate-100')?> rounded"><?=$i?></a>
             <?php endfor; ?>
             <?php if($page<$totalPages): ?><a href="?p=<?=$page+1?>&q=<?=urlencode($search)?>" class="px-3 py-1 bg-slate-200 rounded">Next</a><?php endif;?>

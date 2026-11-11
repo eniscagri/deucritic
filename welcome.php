@@ -2,6 +2,7 @@
 require_once __DIR__ . '/includes/i18n.php';
 
 require_once 'includes/config.php';
+require_once __DIR__ . '/includes/content_moderation.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
@@ -33,7 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $bio = trim($_POST['bio'] ?? '');
     $profilePhotoPath = $user['profile_photo'];
 
-    if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] !== UPLOAD_ERR_NO_FILE) {
+    if (dcFindProhibitedContent($bio) !== null) {
+        $errors[] = 'Biyografi küfür, hakaret veya +18 içerik içeremez.';
+    }
+
+    if (empty($errors) && isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] !== UPLOAD_ERR_NO_FILE) {
         $photo = $_FILES['profile_photo'];
         $finfo = new finfo(FILEINFO_MIME_TYPE);
         $mime = isset($photo['tmp_name']) && is_uploaded_file($photo['tmp_name']) ? $finfo->file($photo['tmp_name']) : false;
@@ -64,14 +69,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errors)) {
         $stmt = $pdo->prepare("UPDATE users SET bio = ?, profile_photo = ? WHERE id = ?");
         $stmt->execute([$bio, $profilePhotoPath, $_SESSION['user_id']]);
-        
+
         header('Location: index.php');
         exit;
     }
 }
 
-$defaultAvatar = !empty($user['profile_photo']) 
-    ? $user['profile_photo'] 
+$defaultAvatar = !empty($user['profile_photo'])
+    ? $user['profile_photo']
     : 'https://ui-avatars.com/api/?background=44b5d5&color=fff&bold=true&size=256&name=' . urlencode($user['username']);
 ?>
 
@@ -84,21 +89,21 @@ $defaultAvatar = !empty($user['profile_photo'])
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <script>
-    tailwind.config = { 
-        theme: { 
-            extend: { 
+    tailwind.config = {
+        theme: {
+            extend: {
                 fontFamily: { sans: ['Inter', 'sans-serif'] },
                 colors: { primary: '#b84834', secondary: '#e9c65a', dark: '#1d352f' }
-            } 
-        } 
+            }
+        }
     };
 
     function previewImage(event) {
         const file = event.target.files[0];
         if(file) {
             const reader = new FileReader();
-            reader.onload = () => { 
-                document.getElementById('preview').src = reader.result; 
+            reader.onload = () => {
+                document.getElementById('preview').src = reader.result;
                 // Fotoğraf seçilince atla butonunu gizle, kaydet butonunu vurgula
                 document.getElementById('saveBtn').innerHTML = 'Fotoğrafı Kaydet ve Başla 🚀';
             }
@@ -142,9 +147,9 @@ $defaultAvatar = !empty($user['profile_photo'])
             <!-- Profil Fotoğrafı Yükleme Alanı -->
             <div class="flex flex-col items-center justify-center mb-4">
                 <div class="relative group cursor-pointer">
-                    <img id="preview" src="<?= htmlspecialchars($defaultAvatar) ?>" 
+                    <img id="preview" src="<?= htmlspecialchars($defaultAvatar) ?>"
                          class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg group-hover:opacity-80 transition-opacity duration-300">
-                    
+
                     <label for="profile_photo" class="absolute bottom-1 right-1 bg-primary p-2.5 rounded-full cursor-pointer border-4 border-white shadow-md hover:scale-110 transition-transform duration-300" title="Fotoğraf Yükle">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -164,7 +169,7 @@ $defaultAvatar = !empty($user['profile_photo'])
 
             <div>
                 <label for="bio" class="block text-sm font-semibold text-slate-700 mb-1">Kısa Biyografi (İsteğe bağlı)</label>
-                <textarea name="bio" id="bio" rows="2" placeholder="Kendinden kısaca bahset..." 
+                <textarea name="bio" id="bio" rows="2" placeholder="Kendinden kısaca bahset..."
                     class="w-full p-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition resize-none"><?= htmlspecialchars($user['bio']) ?></textarea>
             </div>
 
@@ -173,8 +178,8 @@ $defaultAvatar = !empty($user['profile_photo'])
                         class="w-full bg-primary text-white p-3.5 rounded-xl font-extrabold text-lg hover:bg-[#963926] transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1">
                     Bilgileri Onayla ve Giriş Yap
                 </button>
-                
-                <a href="index.php" 
+
+                <a href="index.php"
                    class="w-full text-slate-500 p-3 rounded-xl text-center font-bold hover:bg-slate-100 hover:text-slate-800 transition-colors">
                     Şimdilik Geç (Varsayılan Avatarı Kullan)
                 </a>

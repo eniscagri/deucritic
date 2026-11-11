@@ -33,6 +33,8 @@ if (!is_array($dbConfig)) {
     ];
 }
 
+$GLOBALS['deucriticPrivateConfig'] = $dbConfig;
+
 $db_host = trim((string) ($dbConfig['host'] ?? ''));
 $db_name = trim((string) ($dbConfig['name'] ?? ''));
 $db_user = trim((string) ($dbConfig['user'] ?? ''));

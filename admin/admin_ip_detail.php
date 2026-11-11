@@ -3,27 +3,31 @@ require_once 'admin_init.php';
 require_admin();
 
 $ip = $_GET['ip'] ?? '';
-if (!$ip) { header('Location: admin_ip_logs.php'); exit; }
+if (!is_string($ip) || filter_var($ip, FILTER_VALIDATE_IP) === false) { header('Location: admin_ip_logs.php'); exit; }
+if (!admin_table_exists($pdo, 'user_ip_logs')) {
+    http_response_code(404);
+    exit('IP oturum kayıtları bu veritabanında bulunmuyor.');
+}
 
-$info = ip_lookup_cached($ip);
-
-// fetch all logs for this IP
-$stmt = $pdo->prepare("SELECT l.*, u.username, u.email FROM user_ip_logs l LEFT JOIN users u ON l.user_id = u.id WHERE l.ip = :ip ORDER BY l.date DESC LIMIT 200");
+$dateColumn = admin_column_exists($pdo, 'user_ip_logs', 'date') ? 'date' : (admin_column_exists($pdo, 'user_ip_logs', 'created_at') ? 'created_at' : (admin_column_exists($pdo, 'user_ip_logs', 'logged_at') ? 'logged_at' : 'id'));
+$stmt = $pdo->prepare("SELECT l.*, l.`$dateColumn` AS date, u.username, u.email FROM user_ip_logs l LEFT JOIN users u ON l.user_id = u.id WHERE l.ip = :ip ORDER BY l.`$dateColumn` DESC LIMIT 200");
 $stmt->execute([':ip'=>$ip]);
 $logs = $stmt->fetchAll();
+$info = $logs[0] ?? [];
 
-// devices that used this IP
-$devStmt = $pdo->prepare("SELECT * FROM login_devices WHERE ip = :ip ORDER BY last_seen DESC");
-$devStmt->execute([':ip'=>$ip]);
-$devices = $devStmt->fetchAll();
+$devices = [];
+if (admin_table_exists($pdo, 'login_devices') && admin_column_exists($pdo, 'login_devices', 'ip')) {
+    $deviceOrder = admin_column_exists($pdo, 'login_devices', 'last_seen') ? 'last_seen' : 'id';
+    $devStmt = $pdo->prepare("SELECT * FROM login_devices WHERE ip = :ip ORDER BY `$deviceOrder` DESC");
+    $devStmt->execute([':ip'=>$ip]);
+    $devices = $devStmt->fetchAll();
+}
 ?>
 <!doctype html>
 <html>
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IP Detail <?=htmlspecialchars($ip)?></title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50">
@@ -39,13 +43,13 @@ $devices = $devStmt->fetchAll();
             <div>
                 <h3 class="font-semibold">IP</h3>
                 <div class="font-mono"><?=htmlspecialchars($ip)?></div>
-                <div class="mt-2"><strong>Country:</strong> <?=htmlspecialchars($info['country'] ?? '-')?></div>
-                <div><strong>City:</strong> <?=htmlspecialchars($info['city'] ?? '-')?></div>
-                <div><strong>ISP:</strong> <?=htmlspecialchars($info['isp'] ?? '-')?></div>
-                <div><strong>VPN/Proxy:</strong> <?=( (!empty($info['proxy'])||!empty($info['hosting'])) ? '<span class="text-red-600">Yes</span>' : 'No' )?></div>
+                <div class="mt-2"><strong>Ülke:</strong> <?=htmlspecialchars($info['country'] ?? 'Kayıt yok')?></div>
+                <div><strong>Şehir:</strong> <?=htmlspecialchars($info['city'] ?? 'Kayıt yok')?></div>
+                <div><strong>Servis sağlayıcı:</strong> <?=htmlspecialchars($info['isp'] ?? 'Kayıt yok')?></div>
+                <div><strong>VPN/Proxy işareti:</strong> <?=!empty($info['is_vpn']) ? '<span class="text-red-600">Evet</span>' : 'Hayır / bilinmiyor'?></div>
             </div>
             <div>
-                <div id="map" style="height:260px" class="rounded"></div>
+                <div class="rounded bg-slate-100 p-6 text-sm text-slate-500">Konum yalnızca giriş sırasında saklanan yaklaşık ülke/şehir bilgisiyle gösterilir. Canlı konum sorgusu yapılmaz.</div>
             </div>
         </div>
     </div>
@@ -56,8 +60,9 @@ $devices = $devStmt->fetchAll();
             <div class="space-y-2 text-sm">
                 <?php foreach($logs as $l): ?>
                     <div class="p-2 border rounded">
-                        <div><strong><?=htmlspecialchars($l['username'] ?? 'User #'.$l['user_id'])?></strong> — <span class="text-xs text-slate-500"><?=htmlspecialchars($l['date'])?></span></div>
-                        <div class="text-xs"><?=htmlspecialchars($l['country'].' / '.$l['city'].' — '.$l['isp'])?></div>
+                        <div><strong><?=htmlspecialchars($l['username'] ?? 'Kullanıcı #'.$l['user_id'])?></strong> — <span class="text-xs text-slate-500"><?=htmlspecialchars($l['date'] ?? '')?></span></div>
+                        <div class="text-xs"><?=htmlspecialchars(($l['country'] ?? '').' / '.($l['city'] ?? '').' — '.($l['isp'] ?? ''))?></div>
+                        <div class="text-xs"><?=htmlspecialchars(substr($l['user_agent'] ?? '', 0, 200))?></div>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -70,27 +75,14 @@ $devices = $devStmt->fetchAll();
                     <div class="p-2 border rounded">
                         <div><strong>Device ID:</strong> <?=htmlspecialchars($d['id'])?> — <span class="text-xs"><?=htmlspecialchars($d['last_seen'])?></span></div>
                         <div class="text-xs"><?=htmlspecialchars(substr($d['user_agent'] ?? '',0,200))?></div>
-                        <div class="text-xs">Suspicious: <?=($d['is_suspicious'] ? 'Yes' : 'No')?></div>
+                        <div class="text-xs">Şüpheli işareti: <?=(!empty($d['is_suspicious']) ? 'Evet' : 'Hayır')?></div>
                     </div>
                 <?php endforeach; ?>
+                <?php if ($devices === []): ?><p class="text-slate-500">Bu IP için cihaz kaydı bulunamadı.</p><?php endif; ?>
             </div>
         </div>
     </div>
 </main>
 
-<script>
-const lat = <?=json_encode($info['lat'] ?? null)?>;
-const lon = <?=json_encode($info['lon'] ?? null)?>;
-if (lat && lon) {
-    const map = L.map('map').setView([lat, lon], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-    L.marker([lat, lon]).addTo(map).bindPopup('<?=htmlspecialchars($info['country'].' / '.$info['city'])?>');
-} else {
-    document.getElementById('map').innerHTML = '<div class="text-center text-sm text-gray-500 p-6">No coordinates available</div>';
-}
-</script>
 </body>
 </html>

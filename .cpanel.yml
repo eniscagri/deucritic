@@ -67,3 +67,7 @@ deployment:
     - /bin/cp -p -- uye.php "$DEPLOYPATH"
     - /bin/cp -p -- welcome.php "$DEPLOYPATH"
     - /bin/cp -p -- update_photo.php "$DEPLOYPATH"
+    - /bin/mkdir -p "$DEPLOYPATH/admin"
+    - /bin/cp -p -- admin/admin_init.php admin/config.php admin/admin_login.php admin/index.php admin/users.php admin/user_detail.php admin/admin_suspicious.php admin/admin_ip_logs.php admin/admin_ip_detail.php admin/admin_ip_ban.php admin/admin_users_action.php admin/admin_users_badges.php admin/req.php admin/user_ips.php admin/logout.php admin/auth.php admin/functions.php admin/header.php admin/header_ip.php "$DEPLOYPATH/admin/"
+    - /bin/cp -p -- block_user.php "$DEPLOYPATH"
+    - /bin/cp -p -- includes/content_moderation.php "$DEPLOYPATH/includes/"

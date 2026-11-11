@@ -1,31 +1,33 @@
 <?php
-require_once "header.php"; // admin üst menü dahil
-require_once "config.php"; // PDO bağlantısı
+require_once __DIR__ . '/admin_init.php';
+require_admin();
+require_once 'header.php';
 
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: login.php");
-    exit;
+if (admin_table_exists($pdo, 'request')) {
+    $requests_stmt = $pdo->prepare("
+        SELECT r.*, u.username, u.email
+        FROM request r
+        LEFT JOIN users u ON r.user_id = u.id
+        ORDER BY r.date DESC
+    ");
+    $requests_stmt->execute();
+    $requests = $requests_stmt->fetchAll();
+} else {
+    $requests = [];
 }
 
-// --- Kullanıcı Talepleri (requests) ---
-$requests_stmt = $pdo->prepare("
-    SELECT r.*, u.username, u.email
-    FROM request r
-    LEFT JOIN users u ON r.user_id = u.id
-    ORDER BY r.date DESC
-");
-$requests_stmt->execute();
-$requests = $requests_stmt->fetchAll();
-
-// --- Okul Değişikliği Talepleri (school_requests) ---
-$school_stmt = $pdo->prepare("
-    SELECT s.*, u.username, u.email
-    FROM school_requests s
-    LEFT JOIN users u ON s.user_id = u.id
-    ORDER BY s.date DESC
-");
-$school_stmt->execute();
-$school_requests = $school_stmt->fetchAll();
+if (admin_table_exists($pdo, 'school_requests')) {
+    $school_stmt = $pdo->prepare("
+        SELECT s.*, u.username, u.email
+        FROM school_requests s
+        LEFT JOIN users u ON s.user_id = u.id
+        ORDER BY s.date DESC
+    ");
+    $school_stmt->execute();
+    $school_requests = $school_stmt->fetchAll();
+} else {
+    $school_requests = [];
+}
 ?>
 
 <div class="bg-white p-6 rounded-xl shadow-md mt-6">
@@ -97,4 +99,3 @@ $school_requests = $school_stmt->fetchAll();
         </table>
     </div>
 </div>
-
