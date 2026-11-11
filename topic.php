@@ -4,6 +4,10 @@ require_once __DIR__ . '/includes/i18n.php';
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/helpers.php';
 
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
@@ -362,6 +366,17 @@ if($is_logged_in){
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        if ('serviceWorker' in navigator) {
+            let hadController = Boolean(navigator.serviceWorker.controller);
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (hadController) {
+                    window.location.reload();
+                    return;
+                }
+                hadController = true;
+            });
+        }
+
         document.getElementById('lightbox').addEventListener('click', (event) => {
             if (event.target.id === 'lightbox') closeLightbox();
         });
@@ -372,6 +387,16 @@ if($is_logged_in){
         const postBtn = document.getElementById('postEntryBtn');
         const charCount = document.getElementById('charCount');
         const fileInput = document.getElementById('imageInput');
+        const replyDraftKey = `topic-reply-draft-${window.TOPIC_ID}`;
+
+        if (txt && !txt.value) {
+            const savedDraft = sessionStorage.getItem(replyDraftKey);
+            if (savedDraft) {
+                txt.value = savedDraft;
+                sessionStorage.removeItem(replyDraftKey);
+                txt.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
 
         if (fileInput) {
             fileInput.addEventListener('change', function() {
@@ -446,11 +471,15 @@ if($is_logged_in){
                         headers: { 'X-CSRF-Token': window.CSRF_TOKEN },
                         body: form
                     });
-                    if (res.status === 401) {
+                    const data = await res.json().catch(() => null);
+                    const authRequired = res.status === 401 ||
+                        (data && (data.code === 'AUTH_REQUIRED' ||
+                            (typeof data.error === 'string' && data.error.startsWith('Oturumun sona ermiş.'))));
+                    if (authRequired) {
+                        sessionStorage.setItem(replyDraftKey, content);
                         window.location.href = `login.php?redirect=${encodeURIComponent(`topic.php?id=${window.TOPIC_ID}#comments`)}`;
                         return;
                     }
-                    const data = await res.json().catch(() => null);
                     if (!res.ok || !data || !data.success) {
                         throw new Error(data && data.error ? data.error : 'Yanıt gönderilemedi. Lütfen tekrar dene.');
                     }

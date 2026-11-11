@@ -395,6 +395,12 @@ if($user_id){
 
 <script>
 (() => {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js?v=17', { updateViaCache: 'none' })
+            .then(registration => registration.update())
+            .catch(error => console.error('SW Error:', error));
+    }
+
     const menuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('header-mobile-menu');
     const searchButton = document.getElementById('header-search-button');

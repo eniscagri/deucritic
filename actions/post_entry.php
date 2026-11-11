@@ -4,7 +4,10 @@ require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/content_moderation.php';
 
 header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0, private');
+header('Pragma: no-cache');
+header('Expires: 0');
+header('Vary: Cookie');
 
 function post_entry_response(int $status, array $payload): void
 {
@@ -19,7 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 if (empty($_SESSION['user_id'])) {
-    post_entry_response(401, ['success' => false, 'error' => 'Oturumun sona ermiş. Yanıtını paylaşmak için yeniden giriş yap.']);
+    post_entry_response(401, [
+        'success' => false,
+        'code' => 'AUTH_REQUIRED',
+        'error' => 'Oturumun sona ermiş. Yanıtını paylaşmak için yeniden giriş yap.',
+    ]);
 }
 
 $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';

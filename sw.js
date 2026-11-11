@@ -1,9 +1,7 @@
-```js
-const CACHE_VERSION = '15';
+const CACHE_VERSION = '17';
 
 const STATIC_CACHE = `deucritic-static-v${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `deucritic-dynamic-v${CACHE_VERSION}`;
-const API_CACHE = `deucritic-api-v${CACHE_VERSION}`;
 const IMAGE_CACHE = `deucritic-images-v${CACHE_VERSION}`;
 const FONT_CACHE = `deucritic-fonts-v${CACHE_VERSION}`;
 const VIDEO_CACHE = `deucritic-videos-v${CACHE_VERSION}`;
@@ -11,19 +9,8 @@ const VIDEO_CACHE = `deucritic-videos-v${CACHE_VERSION}`;
 const OFFLINE_IMAGE = './uploads/kapalinet.png';
 
 const STATIC_ASSETS = [
-
-    './',
-    './index.php',
-    './dm.php',
     './manifest.json',
-
-    './logo-192.png',
-    './logo-512.png',
-
     './uploads/kapalinet.png',
-
-    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
-
 ];
 
 
@@ -58,7 +45,6 @@ self.addEventListener('activate', event => {
 
                         key !== STATIC_CACHE &&
                         key !== DYNAMIC_CACHE &&
-                        key !== API_CACHE &&
                         key !== IMAGE_CACHE &&
                         key !== FONT_CACHE &&
                         key !== VIDEO_CACHE
@@ -101,29 +87,16 @@ self.addEventListener('fetch', event => {
 
             fetch(request)
 
-                .then(response => {
-
-                    const cloned = response.clone();
-
-                    caches.open(DYNAMIC_CACHE)
-
-                        .then(cache => {
-
-                            cache.put(request, cloned);
-
-                        });
-
-                    return response;
-
-                })
-
-                .catch(async () => {
-
-                    const cached = await caches.match(request);
-
-                    return cached || caches.match('./index.php');
-
-                })
+                .catch(() => new Response(
+                    '<!doctype html><html lang="tr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bağlantı yok</title><body style="font:16px system-ui,sans-serif;max-width:36rem;margin:15vh auto;padding:1.5rem;color:#1d352f"><h1>Bağlantı kurulamadı</h1><p>Güvenliğin için oturum açılmış sayfaları çevrimdışı göstermiyoruz. İnternet bağlantını kontrol edip sayfayı yenile.</p></body></html>',
+                    {
+                        status: 503,
+                        headers: {
+                            'Content-Type': 'text/html; charset=utf-8',
+                            'Cache-Control': 'no-store'
+                        }
+                    }
+                ))
 
         );
 
@@ -287,41 +260,24 @@ self.addEventListener('fetch', event => {
 
 
     if (
-
         request.url.includes('/api/') ||
         request.url.includes('.php')
-
     ) {
 
         event.respondWith(
 
             fetch(request)
 
-                .then(response => {
-
-                    const cloned = response.clone();
-
-                    caches.open(API_CACHE)
-
-                        .then(cache => {
-
-                            cache.put(request, cloned);
-
-                            trimCache(API_CACHE, 150);
-
-                        });
-
-                    return response;
-
-                })
-
-                .catch(async () => {
-
-                    const cached = await caches.match(request);
-
-                    return cached || caches.match(OFFLINE_IMAGE);
-
-                })
+                .catch(() => new Response(
+                    JSON.stringify({ success: false, error: 'Bağlantı kurulamadı. Lütfen tekrar dene.' }),
+                    {
+                        status: 503,
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8',
+                            'Cache-Control': 'no-store'
+                        }
+                    }
+                ))
 
         );
 
@@ -410,12 +366,6 @@ self.addEventListener('message', event => {
     }
 
 
-
-    if (event.data === 'FORCE_UPDATE') {
-
-        updateContent();
-
-    }
 
 });
 
@@ -613,36 +563,3 @@ async function syncMessages() {
     }
 
 }
-
-
-
-self.addEventListener('periodicsync', event => {
-
-    if (event.tag === 'update-feed') {
-
-        event.waitUntil(updateContent());
-
-    }
-
-});
-
-
-
-async function updateContent() {
-
-    try {
-
-        const cache = await caches.open(API_CACHE);
-
-        const response = await fetch('./index.php');
-
-        cache.put('./index.php', response);
-
-    } catch (e) {
-
-        console.log(e);
-
-    }
-
-}
-```

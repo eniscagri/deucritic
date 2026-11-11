@@ -92,7 +92,7 @@ $escape = static function (string $value): string {
                 </p>
 
                 <?php if ($topic): ?>
-                    <div class="mt-8 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+                    <div class="mt-8 rounded-2xl border border-black/15 bg-white/10 p-4 backdrop-blur-sm">
                         <p class="text-[11px] font-bold uppercase tracking-[.16em] text-[#f4d98a]">Devam etmek istediğin konu</p>
                         <p class="mt-2 line-clamp-3 text-lg font-bold leading-snug text-white"><?= $escape($topic['title']) ?></p>
                         <p class="mt-2 text-xs text-white/65">Giriş yaptığında bu konuya geri döneceksin.</p>
