@@ -7,6 +7,12 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 if (isset($_SESSION['user_id'])) { header('Location: index.php'); exit; }
 if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
+$returnTo = 'index.php';
+$requestedReturn = trim((string) ($_POST['redirect'] ?? $_GET['redirect'] ?? ''));
+if (preg_match('/\Atopic\.php\?id=[1-9][0-9]*(?:#comments)?\z/D', $requestedReturn)) {
+    $returnTo = $requestedReturn;
+}
+
 $errors = []; $success = false;
 $username = ''; $email = ''; $recovery_email = ''; $school = ''; $grade = '';
 $termsAccepted = false;
@@ -115,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_id'] = $pdo->lastInsertId();
                 unset($_SESSION['csrf_token']);
 
+                $_SESSION['post_signup_redirect'] = $returnTo;
                 header('Location: welcome.php');
                 exit;
             }
@@ -191,6 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form method="POST" class="space-y-5" id="regForm">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+            <input type="hidden" name="redirect" value="<?= htmlspecialchars($returnTo, ENT_QUOTES, 'UTF-8') ?>">
 
             <div class="space-y-4">
                 <div>

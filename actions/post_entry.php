@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 if (empty($_SESSION['user_id'])) {
-    post_entry_response(401, ['success' => false, 'error' => 'Yanıt paylaşmak için giriş yapmalısın.']);
+    post_entry_response(401, ['success' => false, 'error' => 'Oturumun sona ermiş. Yanıtını paylaşmak için yeniden giriş yap.']);
 }
 
 $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';

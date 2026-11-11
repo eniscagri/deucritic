@@ -9,6 +9,19 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+$returnTo = 'index.php';
+$requestedReturn = trim((string) ($_SESSION['post_signup_redirect'] ?? ''));
+if (preg_match('/\Atopic\.php\?id=[1-9][0-9]*(?:#comments)?\z/D', $requestedReturn)) {
+    $returnTo = $requestedReturn;
+}
+unset($_SESSION['post_signup_redirect']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $postedReturn = trim((string) ($_POST['return_to'] ?? ''));
+    if (preg_match('/\Atopic\.php\?id=[1-9][0-9]*(?:#comments)?\z/D', $postedReturn)) {
+        $returnTo = $postedReturn;
+    }
+}
+
 $errors = [];
 $success = false;
 
@@ -70,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("UPDATE users SET bio = ?, profile_photo = ? WHERE id = ?");
         $stmt->execute([$bio, $profilePhotoPath, $_SESSION['user_id']]);
 
-        header('Location: index.php');
+        header('Location: ' . $returnTo);
         exit;
     }
 }
@@ -144,6 +157,7 @@ $defaultAvatar = !empty($user['profile_photo'])
 
         <form method="POST" enctype="multipart/form-data" class="space-y-6">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
+            <input type="hidden" name="return_to" value="<?= htmlspecialchars($returnTo, ENT_QUOTES, 'UTF-8') ?>">
             <!-- Profil Fotoğrafı Yükleme Alanı -->
             <div class="flex flex-col items-center justify-center mb-4">
                 <div class="relative group cursor-pointer">
@@ -179,7 +193,7 @@ $defaultAvatar = !empty($user['profile_photo'])
                     Bilgileri Onayla ve Giriş Yap
                 </button>
 
-                <a href="index.php"
+                <a href="<?= htmlspecialchars($returnTo, ENT_QUOTES, 'UTF-8') ?>"
                    class="w-full text-slate-500 p-3 rounded-xl text-center font-bold hover:bg-slate-100 hover:text-slate-800 transition-colors">
                     Şimdilik Geç (Varsayılan Avatarı Kullan)
                 </a>

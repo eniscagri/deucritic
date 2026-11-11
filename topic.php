@@ -133,7 +133,7 @@ if($is_logged_in){
                         <span class="text-xs font-bold text-slate-600 italic">Anonim kullanıcı</span>
                     </div>
                 <?php else: ?>
-                    <?php $ppPath = !empty($topic['owner_pp']) ? '/uploads/profile_photos/'.htmlspecialchars($topic['owner_pp']) : '/uploads/default-avatar.png'; ?>
+                    <?php $ppPath = !empty($topic['owner_pp']) ? ''.htmlspecialchars($topic['owner_pp']) : '/uploads/default-avatar.png'; ?>
                     <a href="uye.php?user=<?= urlencode($topic['owner']) ?>" class="flex items-center gap-2.5 group/user">
                         <img src="<?= $ppPath ?>" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm group-hover/user:border-brandBlue transition-colors">
                         <span class="text-sm font-bold text-slate-700 group-hover/user:text-brandBlue transition-colors">@<?= htmlspecialchars($topic['owner']) ?></span>
@@ -284,14 +284,6 @@ if($is_logged_in){
 
             <div class="flex flex-col gap-3 border-t border-slate-200/80 pt-3 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex flex-wrap items-center gap-2">
-                    <div class="relative">
-                        <button id="emojiBtn" type="button" class="topic-tool rounded-xl" title="Emoji ekle" aria-label="Emoji ekle" aria-expanded="false">☺</button>
-                        <div id="emojiPanel" class="hidden absolute bottom-12 left-0 z-30 grid grid-cols-5 gap-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-                            <?php foreach (['😀','😂','🥰','😎','🤔','😡','👍','🔥','💯','✨'] as $emoji): ?>
-                                <button type="button" class="emoji-select flex h-9 w-9 items-center justify-center rounded-lg text-xl hover:bg-slate-100" aria-label="<?= htmlspecialchars($emoji, ENT_QUOTES, 'UTF-8') ?> emojisi"><?= $emoji ?></button>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
                     <label class="topic-tool flex cursor-pointer items-center justify-center rounded-xl" title="Görsel ekle">
                         <input type="file" id="imageInput" name="image" accept="image/jpeg,image/png,image/webp" class="sr-only">
                         <i class="fa-regular fa-image" aria-hidden="true"></i>
@@ -380,34 +372,6 @@ if($is_logged_in){
         const postBtn = document.getElementById('postEntryBtn');
         const charCount = document.getElementById('charCount');
         const fileInput = document.getElementById('imageInput');
-        const emojiBtn = document.getElementById('emojiBtn');
-        const emojiPanel = document.getElementById('emojiPanel');
-
-        if (emojiBtn && emojiPanel && txt) {
-            emojiBtn.addEventListener('click', (event) => {
-                event.stopPropagation();
-                const isOpening = emojiPanel.classList.contains('hidden');
-                emojiPanel.classList.toggle('hidden');
-                emojiBtn.setAttribute('aria-expanded', String(isOpening));
-            });
-            document.querySelectorAll('.emoji-select').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const start = txt.selectionStart;
-                    const end = txt.selectionEnd;
-                    txt.setRangeText(btn.textContent.trim(), start, end, 'end');
-                    txt.dispatchEvent(new Event('input', { bubbles: true }));
-                    emojiPanel.classList.add('hidden');
-                    emojiBtn.setAttribute('aria-expanded', 'false');
-                    txt.focus();
-                });
-            });
-            document.addEventListener('click', (event) => {
-                if (!emojiPanel.contains(event.target) && event.target !== emojiBtn) {
-                    emojiPanel.classList.add('hidden');
-                    emojiBtn.setAttribute('aria-expanded', 'false');
-                }
-            });
-        }
 
         if (fileInput) {
             fileInput.addEventListener('change', function() {
@@ -475,9 +439,10 @@ if($is_logged_in){
                 document.getElementById('submitLabel').textContent = 'Paylaşılıyor...';
 
                 try {
-                    const res = await fetch('actions/post_entry.php', {
+                    const res = await fetch('/actions/post_entry.php', {
                         method: 'POST',
                         credentials: 'same-origin',
+                        cache: 'no-store',
                         headers: { 'X-CSRF-Token': window.CSRF_TOKEN },
                         body: form
                     });

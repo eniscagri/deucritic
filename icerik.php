@@ -152,7 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <?php foreach ($paginatedTopics as $topic): ?>
             <?php 
                 $isBlur = !isset($_SESSION['user_id']) && (crc32($topic['id']) % 2 === 0); 
-                $targetLink = $isBlur ? "egg.php" : "topic.php?id=" . $topic['id'];
+                $targetLink = $isBlur ? "egg.php?topic=" . (int) $topic['id'] : "topic.php?id=" . (int) $topic['id'];
+                $replyLink = $isBlur ? $targetLink : $targetLink . "#comments";
                 
                 $likeIconClass = $topic['is_liked'] ? 'text-pink-500 fill-current' : 'text-slate-400 group-hover/btn:text-pink-500';
                 $likeTextClass = $topic['is_liked'] ? 'text-pink-500' : 'text-slate-400 group-hover/btn:text-pink-500';
@@ -217,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </span>
                             </button>
                             
-                            <button class="flex items-center gap-1.5 hover:text-blue-500 text-slate-400 transition-colors" onclick="window.location.href='<?= $targetLink ?>#comments'; event.stopPropagation();">
+                            <button class="flex items-center gap-1.5 hover:text-blue-500 text-slate-400 transition-colors" onclick="window.location.href='<?= $replyLink ?>'; event.stopPropagation();">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                                 <span class="text-xs font-bold">Yanıtla</span>
                             </button>

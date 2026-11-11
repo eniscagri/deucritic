@@ -1,209 +1,170 @@
 <?php
 require_once __DIR__ . '/includes/i18n.php';
+require_once __DIR__ . '/includes/config.php';
 
-
-include 'includes/config.php';
-
-
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+$topicId = filter_input(INPUT_GET, 'topic', FILTER_VALIDATE_INT);
+$topic = null;
+if ($topicId && $topicId > 0) {
+    $topicStmt = $pdo->prepare('SELECT id, title FROM topics WHERE id = ?');
+    $topicStmt->execute([$topicId]);
+    $topic = $topicStmt->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
-$error = $_SESSION['error'] ?? null;
+$returnTo = $topic ? 'topic.php?id=' . (int) $topic['id'] . '#comments' : 'index.php';
+$loginUrl = 'login.php?redirect=' . rawurlencode($returnTo);
+$registerUrl = 'register.php?redirect=' . rawurlencode($returnTo);
+
+if (!empty($_SESSION['user_id'])) {
+    header('Location: ' . $returnTo);
+    exit;
+}
+
+$error = isset($_SESSION['error']) ? (string) $_SESSION['error'] : '';
 unset($_SESSION['error']);
+$escape = static function (string $value): string {
+    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+};
 ?>
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deucritic | Sosyal Eleştiri Platformu</title>
-
-<link rel="icon" href="/gorsel/favicon.ico?v=20261104">
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-<script>
-tailwind.config = {
-    theme: {
-        extend: {
-            fontFamily: {
-                sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-            },
-            colors: {
-                primary: '#b84834',
-                primaryDark: '#369ab7',
-                secondary: '#e9c65a',
-                darkbg: '#1d352f'
-            }
-        }
-    }
-}
-</script>
-
-<style>
-body {
-    background-color: #f8fafc;
-    background-image: 
-        radial-gradient(at 0% 0%, hsla(193, 62%, 55%, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, hsla(38, 83%, 75%, 0.2) 0px, transparent 50%);
-    background-attachment: fixed;
-}
-.glass-panel {
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4efe4">
+    <meta name="description" content="Deucritic'te kampüs gündemine katıl, düşünceni paylaş ve topluluğun parçası ol.">
+    <title><?= $topic ? $escape($topic['title']) . ' | Deucritic' : 'Topluluğa katıl | Deucritic' ?></title>
+    <link rel="icon" href="/gorsel/favicon.ico?v=20261104">
     <link rel="stylesheet" href="/css/brand.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(ellipse at 12% 8%, rgb(233 198 90 / .16), transparent 34rem),
+                radial-gradient(ellipse at 95% 92%, rgb(184 72 52 / .10), transparent 32rem),
+                #f4efe4 !important;
+        }
+        .gate-shell {
+            box-shadow: 0 32px 90px -42px rgb(29 53 47 / .38), 0 8px 26px rgb(29 53 47 / .06);
+        }
+        .gate-art {
+            background:
+                radial-gradient(circle at 85% 12%, rgb(233 198 90 / .3), transparent 14rem),
+                linear-gradient(145deg, #1d352f, #31483f 68%, #53645a);
+        }
+        .gate-art h1, .gate-art .dc-display { color: #fff !important; }
+        .gate-art .gate-feature { background: rgb(255 253 247 / .08) !important; }
+        .gate-mark {
+            box-shadow: 0 14px 36px rgb(0 0 0 / .18);
+        }
+        .gate-button { transition: transform .18s ease, background .18s ease, box-shadow .18s ease; }
+        .gate-button:hover { transform: translateY(-2px); }
+        .gate-feature { border: 1px solid rgb(255 253 247 / .18); background: rgb(255 253 247 / .08); }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+        }
+    </style>
 </head>
+<body class="flex min-h-screen items-center justify-center p-0 text-[#1d352f] sm:p-5">
+    <main class="gate-shell grid min-h-[min(760px,100vh)] w-full max-w-6xl overflow-hidden bg-[#fffdf7] sm:min-h-0 sm:rounded-[28px] md:grid-cols-[.92fr_1.08fr]">
+        <section class="gate-art relative flex flex-col justify-between overflow-hidden px-6 py-7 text-white sm:px-10 sm:py-9 md:px-12 md:py-11">
+            <div class="pointer-events-none absolute -bottom-28 -left-20 h-80 w-80 rounded-full border border-white/10"></div>
+            <div class="pointer-events-none absolute -bottom-16 -left-8 h-56 w-56 rounded-full border border-white/10"></div>
 
-<body class="min-h-screen flex items-center justify-center p-4 sm:p-8 font-sans text-slate-800">
+            <a href="/index.php" class="relative z-10 inline-flex w-fit items-center gap-3 rounded-xl text-white no-underline" aria-label="Deucritic ana sayfa">
+                <span class="gate-mark grid h-12 w-12 place-items-center rounded-2xl bg-[#fffdf7] p-2">
+                    <img src="/gorsel/deucritic-mark.svg" alt="" class="h-full w-full object-contain">
+                </span>
+                <span class="text-xl font-extrabold tracking-tight text-white">Deucritic</span>
+            </a>
 
-<div class="max-w-5xl w-full bg-white rounded-3xl shadow-[0_20px_50px_rgba(8,_112,_184,_0.07)] overflow-hidden flex flex-col md:flex-row border border-slate-100">
+            <div class="relative z-10 my-10 max-w-lg md:my-0">
+                <p class="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold tracking-wide text-[#f4d98a]">
+                    <i class="fa-solid fa-lock text-[10px]" aria-hidden="true"></i>
+                    DEÜ topluluğuna özel
+                </p>
+                <h1 class="dc-display max-w-lg text-4xl leading-[1.08] text-white sm:text-5xl">
+                    Kampüsün sesi,<br>seninle tamam.
+                </h1>
+                <p class="mt-5 max-w-md text-sm leading-7 text-white/75 sm:text-base">
+                    Gündemi keşfet, farklı fikirlerle tanış ve düşünceni güvenli bir toplulukta paylaş.
+                </p>
 
-    <div class="md:w-5/12 bg-gradient-to-br from-primary via-[#61c5e0] to-secondary p-8 md:p-10 text-white flex flex-col justify-between relative overflow-hidden">
-        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white opacity-10 blur-3xl"></div>
-        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 rounded-full bg-secondary opacity-30 blur-2xl"></div>
-
-        <div class="relative z-10">
-            <div class="flex items-center gap-3 mb-8">
-                <div class="bg-white p-2 rounded-xl shadow-lg">
-                    <img src="/gorsel/deucritic-mark.svg" alt="Deucritic Logo" class="w-10 h-10 object-contain">
-                </div>
-                <h1 class="text-3xl font-extrabold tracking-tight">Deucritic</h1>
+                <?php if ($topic): ?>
+                    <div class="mt-8 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+                        <p class="text-[11px] font-bold uppercase tracking-[.16em] text-[#f4d98a]">Devam etmek istediğin konu</p>
+                        <p class="mt-2 line-clamp-3 text-lg font-bold leading-snug text-white"><?= $escape($topic['title']) ?></p>
+                        <p class="mt-2 text-xs text-white/65">Giriş yaptığında bu konuya geri döneceksin.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="mt-8 grid gap-3 sm:grid-cols-2">
+                        <div class="gate-feature rounded-2xl p-4">
+                            <span class="mb-3 grid h-9 w-9 place-items-center rounded-xl bg-[#e9c65a] text-[#1d352f]">
+                                <i class="fa-solid fa-comments" aria-hidden="true"></i>
+                            </span>
+                            <p class="font-bold text-white">Gerçek tartışmalar</p>
+                            <p class="mt-1 text-xs leading-5 text-white/65">Kampüs gündemine toplulukla birlikte katıl.</p>
+                        </div>
+                        <div class="gate-feature rounded-2xl p-4">
+                            <span class="mb-3 grid h-9 w-9 place-items-center rounded-xl bg-[#d8785d] text-white">
+                                <i class="fa-solid fa-user-secret" aria-hidden="true"></i>
+                            </span>
+                            <p class="font-bold text-white">Paylaşımda tercih senin</p>
+                            <p class="mt-1 text-xs leading-5 text-white/65">Uygun alanlarda anonim paylaşım seçeneğini kullan.</p>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
 
-            <p class="text-white/90 text-lg font-medium leading-relaxed mb-8">
-                Kampüsün nabzını tut. <br>
-                <span class="text-white font-bold">Anonim</span> veya <span class="text-white font-bold">açık</span> şekilde tartış, eleştir ve topluluğa katıl.
-            </p>
+            <p class="relative z-10 text-xs text-white/50">© <?= date('Y') ?> Deucritic · Fikirlerin için bir topluluk.</p>
+        </section>
 
-           <div class="flex flex-wrap gap-2 mb-8">
+        <section class="flex flex-col justify-center px-6 py-9 sm:px-10 sm:py-12 md:px-14 lg:px-20">
+            <div class="mx-auto w-full max-w-md">
+                <nav class="mb-10 flex items-center justify-between gap-4">
+                    <span class="text-xs font-bold uppercase tracking-[.15em] text-[#65736b]">Topluluğa katıl</span>
+                    <div class="flex items-center gap-4 text-xs font-semibold">
+                        <a href="/sss.php" class="text-[#65736b] hover:text-[#b84834]">Yardım</a>
+                        <a href="/about.php" class="text-[#65736b] hover:text-[#b84834]">Hakkında</a>
+                    </div>
+                </nav>
 
-    <!-- Anonim -->
-    <span class="group bg-white/20 backdrop-blur-xl border border-white/30 text-white text-xs font-semibold px-4 py-2 rounded-full flex items-center gap-2 transition hover:bg-white/30 hover:scale-105">
-        <div class="p-1 rounded-full bg-white/20 group-hover:bg-white/40 transition">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4">
-                </path>
-            </svg>
-        </div>
-        <span>Anonim Paylaşım</span>
-    </span>
+                <?php if ($error !== ''): ?>
+                    <div role="alert" class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"><?= $escape($error) ?></div>
+                <?php endif; ?>
 
-    <!-- Tartışma -->
-    <span class="group bg-white/20 backdrop-blur-xl border border-white/30 text-white text-xs font-semibold px-4 py-2 rounded-full flex items-center gap-2 transition hover:bg-white/30 hover:scale-105">
-        <div class="p-1 rounded-full bg-white/20 group-hover:bg-white/40 transition">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z">
-                </path>
-            </svg>
-        </div>
-        <span>Canlı Tartışmalar</span>
-        <span class="ml-1 text-[10px] bg-green-400 text-black px-1.5 py-0.5 rounded-full animate-pulse">LIVE</span>
-    </span>
+                <p class="text-xs font-extrabold uppercase tracking-[.18em] text-[#b84834]">Sohbete devam et</p>
+                <h2 class="dc-display mt-3 text-3xl leading-tight sm:text-4xl">
+                    <?= $topic ? 'Fikrini paylaşmaya hazır mısın?' : 'Gündeme sen de katıl.' ?>
+                </h2>
+                <p class="mt-4 text-sm leading-6 text-[#65736b]">
+                    <?= $topic
+                        ? 'Bu konuşmayı okumak ve yanıt yazmak için hesabına giriş yap veya Deucritic’e katıl.'
+                        : 'İçerikleri görmek ve konuşmalara katılmak için Deucritic hesabınla devam et.' ?>
+                </p>
 
-    <!-- Rozet -->
-    <span class="group bg-white/20 backdrop-blur-xl border border-white/30 text-white text-xs font-semibold px-4 py-2 rounded-full flex items-center gap-2 transition hover:bg-white/30 hover:scale-105">
-        <div class="p-1 rounded-full bg-white/20 group-hover:bg-white/40 transition">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z">
-                </path>
-            </svg>
-        </div>
-        <span>Rozet & Seviye Sistemi</span>
-    </span>
-
-    <!-- Yeni: Sosyal Kanıt -->
-    <span class="bg-gradient-to-r from-primary to-secondary text-white text-xs font-bold px-4 py-2 rounded-full flex items-center gap-2 shadow-lg animate-pulse">
-        🔥 1000+ Aktif Öğrenci
-    </span>
-
-</div>
-        </div>
-
-        <?php
-        $stmt = $pdo->query("SELECT COUNT(*) FROM users");
-        $realUserCount = $stmt->fetchColumn();
-        $activeStudentCount = $realUserCount + 1000;
-        ?>
-        <div class="relative z-10 glass-panel rounded-2xl p-4 mt-8 flex justify-between items-center">
-            <div>
-                <p class="text-white/80 text-xs font-semibold uppercase tracking-wider mb-1">DEÜ Aktif Öğrenci</p>
-                <p class="text-2xl font-bold text-white"><?= number_format($activeStudentCount, 0, ',', '.') ?></p>
-            </div>
-            <div class="relative flex items-center justify-center h-10 w-10 bg-white/20 rounded-full">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-60"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-green-400"></span>
-            </div>
-        </div>
-    </div>
-
-    <div class="md:w-7/12 p-8 md:p-12 lg:p-16 flex flex-col justify-center relative">
-        
-        <nav class="absolute top-6 right-8 flex gap-6 text-sm font-semibold text-slate-400">
-            <a href="/sss.php" class="hover:text-primary transition-colors">SSS</a>
-            <a href="/about.php" class="hover:text-primary transition-colors">Kimiz?</a>
-            <a href="/paper.php" class="hover:text-primary transition-colors">Haberler</a>
-        </nav>
-
-        <div class="mt-8 md:mt-0 max-w-sm w-full mx-auto space-y-8">
-            
-            <div class="text-center md:text-left">
-                <h2 class="text-2xl font-bold text-slate-800 mb-2">Aramıza Gel veya Katıl</h2>
-                <p class="text-slate-500 text-sm">İçerikleri görmek ve tartışmalara katılmak için giriş yapmalısın. Bunu paylaşımlarınızın gizliliği için yapıyoruz.</p>
-            </div>
-
-            <?php if ($error): ?>
-                <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg text-sm font-medium shadow-sm">
-                    <?= htmlspecialchars($error) ?>
-                </div>
-            <?php endif; ?>
-
-            <div class="space-y-4">
-                <a href="/login.php" class="block w-full text-center bg-primary text-white font-bold py-3.5 rounded-xl shadow-lg shadow-primary/30 hover:bg-primaryDark hover:-translate-y-0.5 transition-all duration-200">
-                    Giriş Yap
-                </a>
-                
-                <div class="relative flex items-center py-2">
-                    <div class="flex-grow border-t border-slate-200"></div>
-                    <span class="flex-shrink-0 mx-4 text-slate-400 text-xs font-semibold uppercase tracking-wider">veya ilk defa geliyorsan</span>
-                    <div class="flex-grow border-t border-slate-200"></div>
+                <div class="mt-8 space-y-3">
+                    <a href="<?= $escape($loginUrl) ?>" class="gate-button flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#1d352f] px-5 py-3 text-sm font-extrabold text-white no-underline shadow-lg shadow-[#1d352f]/15 hover:bg-[#b84834] hover:text-white">
+                        Giriş yap
+                        <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
+                    </a>
+                    <a href="<?= $escape($registerUrl) ?>" class="gate-button flex min-h-12 w-full items-center justify-center rounded-xl border border-[#ded6c5] bg-white px-5 py-3 text-sm font-bold text-[#1d352f] no-underline hover:border-[#b84834] hover:text-[#b84834]">
+                        DEÜ hesabınla kayıt ol
+                    </a>
                 </div>
 
-                <a href="/register.php" class="block w-full text-center bg-white border-2 border-slate-200 text-slate-700 font-bold py-3.5 rounded-xl hover:border-primary hover:text-primary transition-all duration-200">
-                    Yeni Hesap Oluştur
-                </a>
-            </div>
-
-            <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Yakında Diğer Okullarda</h3>
-                <div class="flex flex-wrap gap-2">
-                    <span class="bg-white border border-slate-200 text-slate-500 text-[11px] font-semibold px-2.5 py-1 rounded-md">Ege Üni.</span>
-                    <span class="bg-white border border-slate-200 text-slate-500 text-[11px] font-semibold px-2.5 py-1 rounded-md">Demokrasi Üni.</span>
-                    <span class="bg-white border border-slate-200 text-slate-500 text-[11px] font-semibold px-2.5 py-1 rounded-md">Ekonomi Üni.</span>
-                    <span class="bg-white border border-slate-200 text-slate-500 text-[11px] font-semibold px-2.5 py-1 rounded-md">Marmara Üni.</span>
+                <div class="mt-7 flex items-start gap-3 rounded-xl bg-[#f4efe4] p-4">
+                    <i class="fa-solid fa-shield-halved mt-0.5 text-[#b84834]" aria-hidden="true"></i>
+                    <p class="text-xs leading-5 text-[#65736b]">Topluluk güvenliği için kayıt sırasında DEÜ e-posta adresi gerekir. Kişisel bilgilerini paylaşmadan önce görünürlük seçeneklerini kontrol et.</p>
                 </div>
-                <a href="req.php" class="inline-block mt-4 text-sm font-semibold text-primary hover:text-primaryDark hover:underline transition-colors">
-                    Kendi okulunda da görmek ister misin? &rarr;
-                </a>
+
+                <p class="mt-8 text-center text-xs text-[#65736b]">
+                    Bir sorunun mu var?
+                    <a href="/sss.php" class="font-bold text-[#b84834] underline underline-offset-2">Yardım merkezine göz at</a>
+                </p>
             </div>
-
-        </div>
-
-        <footer class="mt-12 text-center text-[11px] text-slate-400 font-medium">
-            <p>Yalnızca sizin için. © 2026 Deucritic</p>
-            <p class="mt-1">an eniscagri production</p>
-        </footer>
-
-    </div>
-
-</div>
-
+        </section>
+    </main>
 </body>
 </html>
