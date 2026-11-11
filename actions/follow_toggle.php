@@ -1,25 +1,29 @@
 <?php
-require_once 'includes/config.php';
-require_once 'includes/functions.php';
+require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/functions.php';
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($_SESSION['user_id'])) {
+    http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Oturum açmanız gerekiyor.']);
     exit;
 }
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-if (!isset($data['csrf_token']) || $data['csrf_token'] !== $_SESSION['csrf_token']) {
+if (!is_array($data) || !isset($data['csrf_token'], $_SESSION['csrf_token']) ||
+    !hash_equals((string) $_SESSION['csrf_token'], (string) $data['csrf_token'])) {
+    http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Geçersiz güvenlik tokeni (CSRF).']);
     exit;
 }
 
 $follower_id = $_SESSION['user_id'];
-$followed_id = $data['target_id'] ?? 0;
+$followed_id = filter_var($data['target_id'] ?? null, FILTER_VALIDATE_INT);
 
 if (!$followed_id || $follower_id == $followed_id) {
+    http_response_code(422);
     echo json_encode(['success' => false, 'message' => 'Geçersiz işlem.']);
     exit;
 }
@@ -39,5 +43,7 @@ try {
         echo json_encode(['success' => true, 'is_following' => true]);
     }
 } catch (PDOException $e) {
+    error_log('Profile follow toggle failed: ' . $e->getMessage());
+    http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Sunucu hatası.']);
 }

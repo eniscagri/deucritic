@@ -19,7 +19,7 @@ $topic = fetch_topic($pdo, $topic_id);
 if (!$topic) { header('Location: index.php'); exit; }
 
 $entries = fetch_entries($pdo, $topic_id);
-$is_logged_in = !empty($_SESSION['user_id']);
+$is_logged_in = $isLoggedIn;
 $current_user_id = $_SESSION['user_id'] ?? 0;
 $forceAnon = false;
 
