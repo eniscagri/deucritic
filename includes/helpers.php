@@ -3,7 +3,8 @@
 
 function fetch_topic(PDO $pdo, int $topic_id): ?array {
     $stmt = $pdo->prepare("
-        SELECT t.id, t.title, t.description, t.created_at, t.anonymous, t.created_by, u.username AS owner
+        SELECT t.id, t.title, t.description, t.created_at, t.anonymous, t.created_by,
+               u.username AS owner, u.profile_photo AS owner_pp
         FROM topics t
         JOIN users u ON t.created_by = u.id
         WHERE t.id = ?

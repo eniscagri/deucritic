@@ -2,104 +2,113 @@
 <?php
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/content_moderation.php';
-header('Content-Type: application/json; charset=utf-8');
 
-function is_logged_in() {
-    return !empty($_SESSION['user_id']);
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
+
+function post_entry_response(int $status, array $payload): void
+{
+    http_response_code($status);
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    exit;
 }
 
-if (!is_logged_in()) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'error' => 'Giriş yapmalısın']);
-    exit;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Allow: POST');
+    post_entry_response(405, ['success' => false, 'error' => 'Bu işlem yalnızca POST isteğiyle yapılabilir.']);
+}
+
+if (empty($_SESSION['user_id'])) {
+    post_entry_response(401, ['success' => false, 'error' => 'Yanıt paylaşmak için giriş yapmalısın.']);
 }
 
 $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-if (!$csrf || !hash_equals($_SESSION['csrf_token'] ?? '', $csrf)) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'CSRF doğrulaması başarısız']);
-    exit;
+if (!is_string($csrf) || $csrf === '' || !hash_equals((string) ($_SESSION['csrf_token'] ?? ''), $csrf)) {
+    post_entry_response(403, ['success' => false, 'error' => 'Oturum doğrulanamadı. Sayfayı yenileyip tekrar dene.']);
 }
 
-$topic_id = intval($_POST['topic_id'] ?? 0);
-$content = trim($_POST['content'] ?? '');
-$anonymous = isset($_POST['anonymous']) && $_POST['anonymous']=='1' ? 1 : 0;
+$topicId = filter_var($_POST['topic_id'] ?? null, FILTER_VALIDATE_INT);
+$content = trim((string) ($_POST['content'] ?? ''));
+$contentLength = mb_strlen($content, 'UTF-8');
+$anonymous = (isset($_POST['anonymous']) && $_POST['anonymous'] === '1') ? 1 : 0;
 
-if($topic_id <= 0 || mb_strlen($content) < 5){
-    echo json_encode(['success'=>false,'error'=>'Eksik veya kısa içerik']);
-    exit;
+if (!$topicId || $contentLength < 5 || $contentLength > 500) {
+    post_entry_response(422, ['success' => false, 'error' => 'Yanıt 5 ile 500 karakter arasında olmalı.']);
 }
 
-$moderationCategory = dcFindProhibitedContent($content);
-if ($moderationCategory !== null) {
-    http_response_code(422);
-    echo json_encode(['success' => false, 'error' => 'Paylaşım küfür, hakaret veya +18 içerik içeremez.']);
-    exit;
+$topicStmt = $pdo->prepare('SELECT anonymous FROM topics WHERE id = ?');
+$topicStmt->execute([$topicId]);
+$topicIsAnonymous = $topicStmt->fetchColumn();
+if ($topicIsAnonymous === false) {
+    post_entry_response(404, ['success' => false, 'error' => 'Yanıtlamak istediğin konu bulunamadı.']);
+}
+$anonymous = ($anonymous || (bool) $topicIsAnonymous) ? 1 : 0;
+
+$forceAnonymousStmt = $pdo->prepare('SELECT 1 FROM entries WHERE user_id = ? AND anonymous = 1 LIMIT 1');
+$forceAnonymousStmt->execute([$_SESSION['user_id']]);
+if ($forceAnonymousStmt->fetchColumn()) {
+    $anonymous = 1;
+}
+
+if (dcFindProhibitedContent($content) !== null) {
+    post_entry_response(422, ['success' => false, 'error' => 'Paylaşım küfür, hakaret veya +18 içerik içeremez.']);
 }
 
 $imagePath = null;
-if (!empty($_FILES['image']['name'])) {
-    $f = $_FILES['image'];
+$uploadedImage = null;
+if (isset($_FILES['image']) && (int) $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+    $file = $_FILES['image'];
+    if ((int) $file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) {
+        post_entry_response(422, ['success' => false, 'error' => 'Görsel yüklenemedi. Tekrar deneyebilir veya görselsiz paylaşabilirsin.']);
+    }
+
+    if ((int) $file['size'] <= 0 || (int) $file['size'] > 2 * 1024 * 1024) {
+        post_entry_response(422, ['success' => false, 'error' => 'Görsel boyutu en fazla 2 MB olabilir.']);
+    }
 
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mime = finfo_file($finfo, $f['tmp_name']);
+    if ($finfo === false) {
+        error_log('Unable to initialize fileinfo for topic image upload.');
+        post_entry_response(500, ['success' => false, 'error' => 'Görsel şu anda doğrulanamıyor. Lütfen daha sonra tekrar dene.']);
+    }
+    $mime = finfo_file($finfo, $file['tmp_name']);
     finfo_close($finfo);
 
     $allowedMimes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-    if (!array_key_exists($mime, $allowedMimes)) {
-        echo json_encode(['success' => false, 'error' => 'Sadece JPEG, PNG veya WEBP formatları kabul edilir.']);
-        exit;
+    if (!isset($allowedMimes[$mime])) {
+        post_entry_response(422, ['success' => false, 'error' => 'Yalnızca JPEG, PNG veya WEBP görseli ekleyebilirsin.']);
     }
 
-    if ($f['size'] > 2 * 1024 * 1024) { // 2MB sınırı
-        echo json_encode(['success' => false, 'error' => 'Dosya boyutu en fazla 2MB olabilir.']);
-        exit;
+    $uploadDir = __DIR__ . '/../uploads/onepler/';
+    if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+        error_log('Unable to create topic image upload directory.');
+        post_entry_response(500, ['success' => false, 'error' => 'Görsel yükleme alanı şu anda kullanılamıyor.']);
     }
 
-    $ext = $allowedMimes[$mime];
-    $name = bin2hex(random_bytes(12)) . '.' . $ext;
-    $destDir = __DIR__ . '/../uploads/onepler/';
-    if (!is_dir($destDir)) mkdir($destDir, 0755, true);
-    $dest = $destDir . $name;
-
-    if (!move_uploaded_file($f['tmp_name'], $dest)) {
-        echo json_encode(['success' => false, 'error' => 'Dosya yüklenirken bir hata oluştu.']);
-        exit;
+    $filename = bin2hex(random_bytes(12)) . '.' . $allowedMimes[$mime];
+    $uploadedImage = $uploadDir . $filename;
+    if (!move_uploaded_file($file['tmp_name'], $uploadedImage)) {
+        post_entry_response(500, ['success' => false, 'error' => 'Görsel kaydedilemedi. Lütfen tekrar dene.']);
     }
-
-    $imagePath = '/uploads/onepler/' . $name;
+    $imagePath = '/uploads/onepler/' . $filename;
 }
 
-
 $link = null;
-if(preg_match('/\b((https?:\/\/|www\.)[^\s<]+)/i', $content, $m)){
-    $candidate = rtrim($m[1], '.,;:!?)');
-    if(strpos($candidate,'www.') === 0) $candidate = 'http://' . $candidate;
-    $link = $candidate;
+if (preg_match('/\b((https?:\/\/|www\.)[^\s<]+)/i', $content, $match)) {
+    $candidate = rtrim($match[1], '.,;:!?)');
+    $link = strpos($candidate, 'www.') === 0 ? 'http://' . $candidate : $candidate;
 }
 
 try {
-    $stmt = $pdo->prepare("INSERT INTO entries (topic_id,user_id,content,link,image,anonymous,created_at) VALUES (?,?,?,?,?,?,NOW())");
-    $stmt->execute([$topic_id, $_SESSION['user_id'], $content, $link, $imagePath, $anonymous]);
-    $entry_id = $pdo->lastInsertId();
-
-    $username = $_SESSION['username'] ?? 'U';
-    $displayName = $anonymous ? 'Anonim' : '@'.htmlspecialchars($username);
-    $firstChar = strtoupper(mb_substr($username,0,1));
-
-    $rendered = '<div class="p-4 rounded-xl bg-gray-50 border mb-3 animate-fade" data-id="'.$entry_id.'">';
-    $rendered .= '<div class="flex gap-2 items-center mb-2">';
-    $rendered .= '<div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">'.$firstChar.'</div>';
-    $rendered .= '<span class="text-xs text-gray-500">'.$displayName.'</span>';
-    $rendered .= '<span class="text-xs text-gray-400 ml-auto">'.date('d.m.Y H:i').'</span></div>';
-    $rendered .= '<div class="text-sm leading-relaxed">'.nl2br(htmlspecialchars($content)).'</div>';
-    if($imagePath) $rendered .= '<div class="mt-2"><img src="'.htmlspecialchars($imagePath).'" class="max-w-full rounded"></div>';
-    $rendered .= '</div>';
-
-    echo json_encode(['success'=>true, 'entry_id'=>$entry_id, 'html'=>$rendered]);
-
-} catch(Exception $ex){
-    error_log($ex->getMessage());
-    echo json_encode(['success'=>false,'error'=>'Veritabanı hatası']);
+    $stmt = $pdo->prepare(
+        'INSERT INTO entries (topic_id, user_id, content, link, image, anonymous, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())'
+    );
+    $stmt->execute([$topicId, $_SESSION['user_id'], $content, $link, $imagePath, $anonymous]);
+    post_entry_response(201, ['success' => true, 'entry_id' => (int) $pdo->lastInsertId()]);
+} catch (PDOException $exception) {
+    if ($uploadedImage !== null && is_file($uploadedImage)) {
+        unlink($uploadedImage);
+    }
+    error_log('Topic reply failed: ' . $exception->getMessage());
+    post_entry_response(500, ['success' => false, 'error' => 'Yanıt kaydedilemedi. Lütfen tekrar dene.']);
 }
-require_once '../includes/helpers.php';

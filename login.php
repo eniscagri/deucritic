@@ -13,6 +13,11 @@ $user_ip = filter_var($remoteIp, FILTER_VALIDATE_IP) !== false ? $remoteIp : nul
 
 $error = '';
 $username = '';
+$returnTo = 'index.php';
+$requestedReturn = trim((string) ($_POST['redirect'] ?? $_GET['redirect'] ?? ''));
+if (preg_match('/\Atopic\.php\?id=[1-9][0-9]*(?:#comments)?\z/D', $requestedReturn)) {
+    $returnTo = $requestedReturn;
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         $error = "Geçersiz istek.";
@@ -58,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     error_log('Login history record failed: ' . $e->getMessage());
                 }
 
-                header("Location: index.php");
+                header('Location: ' . $returnTo);
                 exit;
             } else {
                 $error = "Kullanıcı adı veya şifre hatalı.";
@@ -214,7 +219,7 @@ input { font-size: 16px !important; }
             </div>
 
             <div class="absolute bottom-7 sm:bottom-9 md:bottom-11 left-0 w-full px-6 sm:px-8 md:px-10 z-20">
-
+                
                 <h1 class="text-[2rem] sm:text-4xl md:text-5xl font-extrabold text-white mb-2 leading-[1.05] tracking-tight">
                     Kampüs<br class="hidden md:block"> burada başlar.
                 </h1>
@@ -243,7 +248,8 @@ input { font-size: 16px !important; }
 
                 <form method="POST" class="space-y-5" autocomplete="on">
                     <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-
+                    <input type="hidden" name="redirect" value="<?= htmlspecialchars($returnTo, ENT_QUOTES, 'UTF-8') ?>">
+                    
                     <div class="input-field">
                         <label for="username" class="block text-[13px] font-bold text-slate-700 mb-2 transition-colors">Takma ad veya okul e-postası</label>
                         <input id="username" type="text" name="username" value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>" placeholder="Takma adın ya da DEÜ e-postan"
